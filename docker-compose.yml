@@ -19,8 +19,8 @@ services:
         environment:
             # Replace 1000 with your actual user and group ID.
             # Find them by running `id -u` and `id -g` in your terminal.
-            - PUID=503
-            - PGID=20
+            - PUID=1026
+            - PGID=100
             - VERSION=docker
             # Optional: Claim token for headless setup.
             # Get one from https://www.plex.tv/claim and paste it here if needed.
@@ -38,8 +38,8 @@ services:
         image: linuxserver/radarr:latest
         container_name: radarr
         environment:
-            - PUID=503
-            - PGID=20
+            - PUID=1026
+            - PGID=100
             - TZ=Etc/UTC
         volumes:
             - /docker/home-server/services/radarr/config:/config
@@ -53,8 +53,8 @@ services:
         image: linuxserver/sonarr:latest
         container_name: sonarr
         environment:
-            - PUID=503
-            - PGID=20
+            - PUID=1026
+            - PGID=100
             - TZ=Etc/UTC
         volumes:
             - /docker/home-server/services/sonarr/config:/config
@@ -68,8 +68,8 @@ services:
         image: linuxserver/prowlarr:latest
         container_name: prowlarr
         environment:
-            - PUID=503
-            - PGID=20
+            - PUID=1026
+            - PGID=100
             - TZ=Etc/UTC
         volumes:
             - /docker/home-server/services/prowlarr/config:/config
@@ -81,8 +81,8 @@ services:
         image: sctx/overseerr:latest
         container_name: overseerr
         environment:
-            - PUID=503
-            - PGID=20
+            - PUID=1026
+            - PGID=100
             - TZ=Etc/UTC
         volumes:
             - /docker/home-server/services/overseerr/config:/app/config
@@ -94,8 +94,8 @@ services:
         image: linuxserver/qbittorrent:latest
         container_name: qbittorrent
         environment:
-            - PUID=503
-            - PGID=20
+            - PUID=1026
+            - PGID=100
             - TZ=Etc/UTC
             - WEBUI_PORT=8080
         volumes:
@@ -113,8 +113,8 @@ services:
         ports:
             - 34400:34400
         environment:
-            - PUID=503
-            - PGID=20
+            - PUID=1026
+            - PGID=100
             - TZ=Etc/UTC
         volumes:
             - /docker/home-server/services/threadfin/config:/config
