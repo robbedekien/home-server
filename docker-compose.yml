@@ -27,10 +27,10 @@ services:
             # - PLEX_CLAIM=YOUR_CLAIM_TOKEN
         volumes:
             # Persist Plex configuration
-            - ./services/plex/config:/config
+            - /docker/home-server/services/plex/config:/config
             # Mount your media libraries (adjust paths if your 'data' dir is elsewhere)
-            - ./data/tv:/data/tvshows
-            - ./data/movies:/data/movies
+            - /docker/home-server/data/tv:/data/tvshows
+            - /docker/home-server/data/movies:/data/movies
             # Add more volumes here for other media types like music or photos
         restart: unless-stopped
 
@@ -42,9 +42,9 @@ services:
             - PGID=20
             - TZ=Etc/UTC
         volumes:
-            - ./services/radarr/config:/config
-            - ./data/movies:/movies
-            - ./data/downloads:/downloads
+            - /docker/home-server/services/radarr/config:/config
+            - /docker/home-server/data/movies:/movies
+            - /docker/home-server/data/downloads:/downloads
         ports:
             - '7878:7878'
         restart: unless-stopped
@@ -57,9 +57,9 @@ services:
             - PGID=20
             - TZ=Etc/UTC
         volumes:
-            - ./services/sonarr/config:/config
-            - ./data/tv:/tv
-            - ./data/downloads:/downloads
+            - /docker/home-server/services/sonarr/config:/config
+            - /docker/home-server/data/tv:/tv
+            - /docker/home-server/data/downloads:/downloads
         ports:
             - '8989:8989'
         restart: unless-stopped
@@ -72,7 +72,7 @@ services:
             - PGID=20
             - TZ=Etc/UTC
         volumes:
-            - ./services/prowlarr/config:/config
+            - /docker/home-server/services/prowlarr/config:/config
         ports:
             - '9696:9696'
         restart: unless-stopped
@@ -85,7 +85,7 @@ services:
             - PGID=20
             - TZ=Etc/UTC
         volumes:
-            - ./services/overseerr/config:/app/config
+            - /docker/home-server/services/overseerr/config:/app/config
         ports:
             - '5055:5055'
         restart: unless-stopped
@@ -99,8 +99,8 @@ services:
             - TZ=Etc/UTC
             - WEBUI_PORT=8080
         volumes:
-            - ./services/qbittorrent/config:/config
-            - ./data/downloads:/downloads
+            - /docker/home-server/services/qbittorrent/config:/config
+            - /docker/home-server/data/downloads:/downloads
         ports:
             - '8080:8080'
             - '6881:6881'
@@ -117,6 +117,6 @@ services:
             - PGID=20
             - TZ=Etc/UTC
         volumes:
-            - ./services/threadfin/config:/config
-            - ./data/temp:/tmp/threadfin:rw
+            - /docker/home-server/services/threadfin/config:/config
+            - /docker/home-server/data/temp:/tmp/threadfin:rw
         restart: unless-stopped
