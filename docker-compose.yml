@@ -1,0 +1,122 @@
+version: '3.8'
+
+services:
+    plex:
+        image: linuxserver/plex:latest
+        container_name: plex
+        # Using host network mode is often easier for Plex discovery on a local network.
+        # Alternatively, you could use bridge mode and map ports:
+        ports:
+            - '32400:32400/tcp'
+            #   - "3005:3005/tcp"
+            #   - "1900:1900/udp"
+            - '8324:8324/tcp'
+            - '32469:32469/tcp'
+            - '32410:32410/udp'
+            - '32412:32412/udp'
+            - '32413:32413/udp'
+            - '32414:32414/udp'
+        environment:
+            # Replace 1000 with your actual user and group ID.
+            # Find them by running `id -u` and `id -g` in your terminal.
+            - PUID=503
+            - PGID=20
+            - VERSION=docker
+            # Optional: Claim token for headless setup.
+            # Get one from https://www.plex.tv/claim and paste it here if needed.
+            # - PLEX_CLAIM=YOUR_CLAIM_TOKEN
+        volumes:
+            # Persist Plex configuration
+            - ./services/plex/config:/config
+            # Mount your media libraries (adjust paths if your 'data' dir is elsewhere)
+            - ./data/tv:/data/tvshows
+            - ./data/movies:/data/movies
+            # Add more volumes here for other media types like music or photos
+        restart: unless-stopped
+
+    radarr:
+        image: linuxserver/radarr:latest
+        container_name: radarr
+        environment:
+            - PUID=503
+            - PGID=20
+            - TZ=Etc/UTC
+        volumes:
+            - ./services/radarr/config:/config
+            - ./data/movies:/movies
+            - ./data/downloads:/downloads
+        ports:
+            - '7878:7878'
+        restart: unless-stopped
+
+    sonarr:
+        image: linuxserver/sonarr:latest
+        container_name: sonarr
+        environment:
+            - PUID=503
+            - PGID=20
+            - TZ=Etc/UTC
+        volumes:
+            - ./services/sonarr/config:/config
+            - ./data/tv:/tv
+            - ./data/downloads:/downloads
+        ports:
+            - '8989:8989'
+        restart: unless-stopped
+
+    prowlarr:
+        image: linuxserver/prowlarr:latest
+        container_name: prowlarr
+        environment:
+            - PUID=503
+            - PGID=20
+            - TZ=Etc/UTC
+        volumes:
+            - ./services/prowlarr/config:/config
+        ports:
+            - '9696:9696'
+        restart: unless-stopped
+
+    overseerr:
+        image: sctx/overseerr:latest
+        container_name: overseerr
+        environment:
+            - PUID=503
+            - PGID=20
+            - TZ=Etc/UTC
+        volumes:
+            - ./services/overseerr/config:/app/config
+        ports:
+            - '5055:5055'
+        restart: unless-stopped
+
+    qbittorrent:
+        image: linuxserver/qbittorrent:latest
+        container_name: qbittorrent
+        environment:
+            - PUID=503
+            - PGID=20
+            - TZ=Etc/UTC
+            - WEBUI_PORT=8080
+        volumes:
+            - ./services/qbittorrent/config:/config
+            - ./data/downloads:/downloads
+        ports:
+            - '8080:8080'
+            - '6881:6881'
+            - '6881:6881/udp'
+        restart: unless-stopped
+
+    threadfin:
+        image: fyb3roptik/threadfin:latest
+        container_name: threadfin
+        ports:
+            - 34400:34400
+        environment:
+            - PUID=503
+            - PGID=20
+            - TZ=Etc/UTC
+        volumes:
+            - ./services/threadfin/config:/config
+            - ./data/temp:/tmp/threadfin:rw
+        restart: unless-stopped

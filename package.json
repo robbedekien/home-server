@@ -1,0 +1,21 @@
+{
+  "name": "plex-test",
+  "version": "1.0.0",
+  "description": "Local Plex server setup with Docker Compose",
+  "scripts": {
+    "start": "docker compose up -d",
+    "stop": "docker compose down",
+    "logs": "docker compose logs -f",
+    "plex:logs": "docker compose logs -f plex",
+    "plex:claim": "echo 'Get claim token from https://www.plex.tv/claim'",
+    "id": "echo \"UID=$(id -u) GID=$(id -g)\""
+  },
+  "keywords": [
+    "plex",
+    "docker",
+    "media",
+    "server"
+  ],
+  "author": "",
+  "license": "ISC"
+} 
