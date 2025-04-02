@@ -136,16 +136,6 @@ services:
             - /volume1/docker/services/nginx-proxy-manager/data:/data
             - /volume1/docker/services/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
 
-    nginx-proxy-manager-db:
-        image: 'jc21/mariadb-aria:latest'
-        environment:
-            MYSQL_ROOT_PASSWORD: 'npm'
-            MYSQL_DATABASE: 'npm'
-            MYSQL_USER: 'npm'
-            MYSQL_PASSWORD: 'npm'
-        volumes:
-            - /volume1/docker/services/nginx-proxy-manager/data/mysql:/var/lib/mysql
-
     homarr:
         image: ghcr.io/homarr-labs/homarr:latest
         container_name: homarr
