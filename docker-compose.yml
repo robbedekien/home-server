@@ -151,6 +151,7 @@ services:
             - PUID=1026 # Use your user ID
             - PGID=100 # Use your group ID
             - TZ=Etc/UTC # Set your timezone
+            - SECRET_ENCRYPTION_KEY=${SECRET_ENCRYPTION_KEY}
 
     ddns:
         image: favonia/cloudflare-ddns:latest
