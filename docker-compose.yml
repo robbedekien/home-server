@@ -120,3 +120,18 @@ services:
             - /volume1/docker/services/threadfin/config:/config
             - /volume1/docker/data/temp:/tmp/threadfin:rw
         restart: unless-stopped
+
+    nginx-proxy-manager:
+        image: 'jc21/nginx-proxy-manager:latest'
+        container_name: nginx-proxy-manager
+        restart: unless-stopped
+        ports:
+            # Public HTTP Port:
+            - '80:80'
+            # Public HTTPS Port:
+            - '443:443'
+            # Admin Web Port:
+            - '81:81'
+        volumes:
+            - /volume1/docker/services/nginx-proxy-manager/data:/data
+            - /volume1/docker/services/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
