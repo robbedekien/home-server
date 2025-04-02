@@ -125,14 +125,26 @@ services:
         image: 'jc21/nginx-proxy-manager:latest'
         container_name: nginx-proxy-manager
         restart: unless-stopped
-        network_mode: host
+        ports:
+            # Public HTTP Port:
+            - '800:80'
+            # Public HTTPS Port:
+            - '4430:443'
+            # Admin Web Port:
+            - '810:81'
         volumes:
             - /volume1/docker/services/nginx-proxy-manager/data:/data
             - /volume1/docker/services/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
-        healthcheck:
-            test: ['CMD', '/usr/bin/check-health']
-            interval: 10s
-            timeout: 3s
+
+    nginx-proxy-manager-db:
+        image: 'jc21/mariadb-aria:latest'
+        environment:
+            MYSQL_ROOT_PASSWORD: 'npm'
+            MYSQL_DATABASE: 'npm'
+            MYSQL_USER: 'npm'
+            MYSQL_PASSWORD: 'npm'
+        volumes:
+            - /volume1/docker/services/nginx-proxy-manager/data/mysql:/var/lib/mysql
 
     homarr:
         image: ghcr.io/homarr-labs/homarr:latest
