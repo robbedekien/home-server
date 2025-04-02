@@ -146,6 +146,9 @@ services:
             - /var/run/docker.sock:/var/run/docker.sock
             - /volume1/docker/services/homarr/appdata:/appdata
         environment:
+            - PUID=1026
+            - PGID=100
+            - TZ=Etc/UTC
             - SECRET_ENCRYPTION_KEY=${SECRET_ENCRYPTION_KEY}
 
     ddns:
