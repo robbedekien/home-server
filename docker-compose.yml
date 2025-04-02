@@ -145,8 +145,7 @@ services:
         volumes:
             - /volume1/docker/services/homarr/configs:/app/data/configs
             - /volume1/docker/services/homarr/icons:/app/public/icons
-            # Optional: Add volume for data if needed by widgets, check Homarr docs
-            # - /volume1/docker/services/homarr/data:/app/data/data
+            - /volume1/docker/services/homarr/data:/app/data/data
         environment:
             - PUID=1026 # Use your user ID
             - PGID=100 # Use your group ID
