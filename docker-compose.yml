@@ -125,16 +125,14 @@ services:
         image: 'jc21/nginx-proxy-manager:latest'
         container_name: nginx-proxy-manager
         restart: unless-stopped
-        ports:
-            # Public HTTP Port:
-            - '800:80'
-            # Public HTTPS Port:
-            - '4430:443'
-            # Admin Web Port:
-            - '810:81'
+        network_mode: host
         volumes:
             - /volume1/docker/services/nginx-proxy-manager/data:/data
             - /volume1/docker/services/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
+        healthcheck:
+            test: ['CMD', '/usr/bin/check-health']
+            interval: 10s
+            timeout: 3s
 
     homarr:
         image: ghcr.io/homarr-labs/homarr:latest
