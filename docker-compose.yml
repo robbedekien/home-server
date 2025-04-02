@@ -135,3 +135,19 @@ services:
         volumes:
             - /volume1/docker/services/nginx-proxy-manager/data:/data
             - /volume1/docker/services/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
+
+    homarr:
+        image: ghcr.io/homarr-labs/homarr:latest
+        container_name: homarr
+        restart: unless-stopped
+        ports:
+            - '7575:7575'
+        volumes:
+            - /volume1/docker/services/homarr/configs:/app/data/configs
+            - /volume1/docker/services/homarr/icons:/app/public/icons
+            # Optional: Add volume for data if needed by widgets, check Homarr docs
+            # - /volume1/docker/services/homarr/data:/app/data/data
+        environment:
+            - PUID=1026 # Use your user ID
+            - PGID=100 # Use your group ID
+            - TZ=Etc/UTC # Set your timezone
