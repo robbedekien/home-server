@@ -151,3 +151,18 @@ services:
             - PUID=1026 # Use your user ID
             - PGID=100 # Use your group ID
             - TZ=Etc/UTC # Set your timezone
+
+    ddns:
+        image: favonia/cloudflare-ddns:latest
+        container_name: cloudflare-ddns
+        # network_mode: host # This bypasses network isolation and makes IPv6 easier (optional; see below)
+        restart: always
+        user: '1000:1000' # Run the updater with specific user and group IDs (in that order).
+        read_only: true # Make the container filesystem read-only (optional but recommended)
+        cap_drop: [all] # Drop all Linux capabilities (optional but recommended)
+        security_opt: [no-new-privileges:true] # Another protection to restrict superuser privileges (optional but recommended)
+        environment:
+            - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+            - DOMAINS=home.robbedekien.be,plex.home.robbedekien.be
+            - PROXIED=true
+            - IP6_PROVIDER=none
