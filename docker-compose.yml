@@ -117,7 +117,7 @@ services:
             - PGID=100
             - TZ=Etc/UTC
         volumes:
-            - /volume1/docker/services/threadfin/config:/config
+            - threadfin-config:/config
             - /volume1/docker/data/temp:/tmp/threadfin:rw
         restart: unless-stopped
 
@@ -150,3 +150,4 @@ networks:
 
 volumes:
     homarr-appdata:
+    threadfin-config:
