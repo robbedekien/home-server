@@ -166,6 +166,14 @@ services:
             - PROXIED=true
             - IP6_PROVIDER=none
 
+    tunnel:
+        container_name: cloudflared-tunnel
+        image: cloudflare/cloudflared
+        restart: unless-stopped
+        command: tunnel run
+        network_mode: host
+        environment:
+            - TUNNEL_TOKEN=${CLOUDFLARED_TUNNEL_TOKEN}
 networks:
     github_default:
         driver: bridge
