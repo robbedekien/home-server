@@ -121,21 +121,6 @@ services:
             - /volume1/docker/data/temp:/tmp/threadfin:rw
         restart: unless-stopped
 
-    nginx-proxy-manager:
-        image: 'jc21/nginx-proxy-manager:latest'
-        container_name: nginx-proxy-manager
-        restart: unless-stopped
-        ports:
-            # Public HTTP Port:
-            - '800:80'
-            # Public HTTPS Port:
-            - '4430:443'
-            # Admin Web Port:
-            - '810:81'
-        volumes:
-            - /volume1/docker/services/nginx-proxy-manager/data:/data
-            - /volume1/docker/services/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
-
     homarr:
         image: ghcr.io/homarr-labs/homarr:latest
         container_name: homarr
@@ -150,21 +135,6 @@ services:
             - PGID=100
             - TZ=Etc/UTC
             - SECRET_ENCRYPTION_KEY=${SECRET_ENCRYPTION_KEY}
-
-    ddns:
-        image: favonia/cloudflare-ddns:latest
-        container_name: cloudflare-ddns
-        # network_mode: host # This bypasses network isolation and makes IPv6 easier (optional; see below)
-        restart: always
-        user: '1000:1000' # Run the updater with specific user and group IDs (in that order).
-        read_only: true # Make the container filesystem read-only (optional but recommended)
-        cap_drop: [all] # Drop all Linux capabilities (optional but recommended)
-        security_opt: [no-new-privileges:true] # Another protection to restrict superuser privileges (optional but recommended)
-        environment:
-            - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
-            - DOMAINS=home.robbedekien.be,plex.robbedekien.be,overseerr.robbedekien.be,radarr.robbedekien.be,sonarr.robbedekien.be,download.robbedekien.be,threadfin.robbedekien.be,prowlarr.robbedekien.be,portainer.robbedekien.be
-            - PROXIED=true
-            - IP6_PROVIDER=none
 
     tunnel:
         container_name: cloudflared-tunnel
