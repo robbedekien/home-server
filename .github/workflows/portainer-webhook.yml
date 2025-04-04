@@ -1,0 +1,13 @@
+name: Trigger Portainer Webhook
+
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    trigger_webhook:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Trigger Portainer Webhook
+              run: curl -X POST https://portainer.robbedekien.be/api/stacks/webhooks/f38e98b8-0d1c-45fd-a153-2bb88263dae2
