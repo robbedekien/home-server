@@ -144,6 +144,18 @@ services:
         network_mode: host
         environment:
             - TUNNEL_TOKEN=${CLOUDFLARED_TUNNEL_TOKEN}
+
+    homeassistant:
+        container_name: homeassistant
+        image: 'ghcr.io/home-assistant/home-assistant:stable'
+        volumes:
+            - /volume1/docker/services/homeassistant/config:/config
+            - /etc/localtime:/etc/localtime:ro
+            - /run/dbus:/run/dbus:ro
+        restart: unless-stopped
+        privileged: true
+        network_mode: host
+
 networks:
     github_default:
         driver: bridge
