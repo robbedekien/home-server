@@ -121,45 +121,9 @@ services:
             - /volume1/docker/data/temp:/tmp/threadfin:rw
         restart: unless-stopped
 
-    homarr:
-        image: ghcr.io/homarr-labs/homarr:latest
-        container_name: homarr
-        restart: unless-stopped
-        ports:
-            - '7575:7575'
-        volumes:
-            - /var/run/docker.sock:/var/run/docker.sock
-            - /volume1/docker/services/homarr/appdata:/appdata
-        environment:
-            - PUID=1026
-            - PGID=100
-            - TZ=Etc/UTC
-            - SECRET_ENCRYPTION_KEY=${SECRET_ENCRYPTION_KEY}
-
-    tunnel:
-        container_name: cloudflared-tunnel
-        image: cloudflare/cloudflared
-        restart: unless-stopped
-        command: tunnel run
-        network_mode: host
-        environment:
-            - TUNNEL_TOKEN=${CLOUDFLARED_TUNNEL_TOKEN}
-
-    homeassistant:
-        container_name: homeassistant
-        image: 'ghcr.io/home-assistant/home-assistant:stable'
-        volumes:
-            - /volume1/docker/services/homeassistant/config:/config
-            - /etc/localtime:/etc/localtime:ro
-            - /run/dbus:/run/dbus:ro
-        restart: unless-stopped
-        privileged: true
-        network_mode: host
-
 networks:
     github_default:
         driver: bridge
 
 volumes:
-    homarr-appdata:
     threadfin-config:
