@@ -121,6 +121,19 @@ services:
             - /volume1/docker/data/temp:/tmp/threadfin:rw
         restart: unless-stopped
 
+    tautulli:
+        image: ghcr.io/tautulli/tautulli
+        container_name: tautulli
+        restart: unless-stopped
+        volumes:
+            - /volume1/docker/services/tautulli/config:/config
+        environment:
+            - PUID=1026
+            - PGID=100
+            - TZ=Etc/UTC
+        ports:
+            - 8181:8181
+
 networks:
     github_default:
         driver: bridge
