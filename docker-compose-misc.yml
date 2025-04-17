@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
     mc:
+        container_name: minecraft
         image: itzg/minecraft-server
         environment:
             MEMORY: '4G'
