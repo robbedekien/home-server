@@ -134,6 +134,20 @@ services:
         ports:
             - 8181:8181
 
+    sabnzbd:
+        image: linuxserver/sabnzbd:latest
+        container_name: sabnzbd
+        environment:
+            - PUID=1026
+            - PGID=100
+            - TZ=Etc/UTC
+        volumes:
+            - /volume1/docker/services/sabnzbd/config:/config
+            - /volume1/docker/downloads:/downloads
+        ports:
+            - 8088:8080
+        restart: unless-stopped
+
 networks:
     github_default:
         driver: bridge
