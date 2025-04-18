@@ -9,7 +9,7 @@ services:
             - '7575:7575'
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
-            - /volume1/docker/services/homarr/appdata:/appdata
+            - /volume2/docker/services/homarr/appdata:/appdata
         environment:
             - PUID=1026
             - PGID=100
@@ -20,7 +20,7 @@ services:
         container_name: homeassistant
         image: 'ghcr.io/home-assistant/home-assistant:stable'
         volumes:
-            - /volume1/docker/services/homeassistant/config:/config
+            - /volume2/docker/services/homeassistant/config:/config
             - /etc/localtime:/etc/localtime:ro
             - /run/dbus:/run/dbus:ro
         restart: unless-stopped
