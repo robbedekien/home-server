@@ -29,8 +29,8 @@ services:
             # Persist Plex configuration
             - /volume2/docker/services/plex/config:/config
             # Mount your media libraries (adjust paths if your 'data' dir is elsewhere)
-            - /volume2/docker/data/tv:/data/tvshows
-            - /volume2/docker/data/movies:/data/movies
+            - /volume1/media/tv:/data/tvshows
+            - /volume1/media/movies:/data/movies
             # Add more volumes here for other media types like music or photos
         restart: unless-stopped
 
@@ -43,7 +43,7 @@ services:
             - TZ=Etc/UTC
         volumes:
             - /volume2/docker/services/radarr/config:/config
-            - /volume2/docker/data/movies:/movies
+            - /volume1/media/movies:/movies
             - /volume2/docker/downloads:/downloads
         ports:
             - '7878:7878'
@@ -58,7 +58,7 @@ services:
             - TZ=Etc/UTC
         volumes:
             - /volume2/docker/services/sonarr/config:/config
-            - /volume2/docker/data/tv:/tv
+            - /volume1/media/tv:/tv
             - /volume2/docker/downloads:/downloads
         ports:
             - '8989:8989'
