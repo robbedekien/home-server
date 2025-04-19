@@ -10,8 +10,14 @@ services:
       context: .
     image: invoiceninja/invoiceninja-debian:${TAG:-latest}
     restart: unless-stopped
-    env_file:
-      - stack.env
+    environment:
+      - APP_ENV=${APP_ENV}
+      - APP_URL=${APP_URL}
+      - APP_KEY=${APP_KEY}
+      - APP_DEBUG=${APP_DEBUG}
+      - REQUIRE_HTTPS=${REQUIRE_HTTPS}
+      - IN_USER_EMAIL=${IN_USER_EMAIL}
+      - IN_PASSWORD=${IN_PASSWORD}
     volumes:
       # - ./php/php.ini:/usr/local/etc/php/conf.d/invoiceninja.ini:ro
       # - ./php/php-fpm.conf:/usr/local/etc/php-fpm.d/invoiceninja.conf:ro
