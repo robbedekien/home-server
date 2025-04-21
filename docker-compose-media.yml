@@ -151,6 +151,22 @@ services:
             - 8088:8080
         restart: unless-stopped
 
+    bazarr:
+        image: linuxserver/bazarr:latest
+        container_name: bazarr
+        environment:
+            - PUID=1026
+            - PGID=100
+            - TZ=Etc/UTC
+        volumes:
+            - /volume2/docker/services/bazarr/config:/config
+            # Mount movie and TV show folders for subtitle management
+            - /volume1/media/movies:/movies
+            - /volume1/media/tv:/tv
+        ports:
+            - '6767:6767'
+        restart: unless-stopped
+
 networks:
     github_default:
         driver: bridge
