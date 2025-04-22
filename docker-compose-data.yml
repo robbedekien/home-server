@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  mysql:
+    container_name: mysql
+    image: mysql:8
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u${MYSQL_USER}",
+          "-p${MYSQL_PASSWORD}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+
+volumes:
+    mysql_data:

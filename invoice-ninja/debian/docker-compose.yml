@@ -80,7 +80,7 @@ services:
     depends_on:
       - app
     logging: *default-logging
-  # Test comment
+
   mysql:
     image: mysql:8
     restart: unless-stopped
