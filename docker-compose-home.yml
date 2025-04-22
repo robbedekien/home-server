@@ -28,6 +28,7 @@ services:
         network_mode: host
 
     adguardhome:
+        container_name: adguard
         image: adguard/adguardhome
         ports:
             - 53:53/tcp # plain dns over tcp
