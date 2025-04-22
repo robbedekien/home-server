@@ -27,9 +27,22 @@ services:
         privileged: true
         network_mode: host
 
+    adguardhome:
+        image: adguard/adguardhome
+        ports:
+            - 53:53/tcp # plain dns over tcp
+            - 53:53/udp # plain dns over udp
+            - 8040:80/tcp # http web interface
+            - 3000:3000/tcp # initial setup web interface
+        volumes:
+            - config:/opt/adguardhome/conf # app configuration
+            - work:/opt/adguardhome/work # app working directory
+
 networks:
     github_default:
         driver: bridge
 
 volumes:
     homarr-appdata:
+    config:
+    work:
