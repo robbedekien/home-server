@@ -33,29 +33,9 @@ services:
             - 192.168.4.61
             - 1.1.1.1
 
-    adguardhome:
-        container_name: adguard
-        image: adguard/adguardhome
-        ports:
-            - 53:53/tcp # plain dns over tcp
-            - 53:53/udp # plain dns over udp
-            - 8040:80/tcp # http web interface
-            - 3000:3000/tcp # initial setup web interface
-        dns:
-            - 1.1.1.1
-            - 8.8.8.8
-        volumes:
-            - config:/opt/adguardhome/conf # app configuration
-            - work:/opt/adguardhome/work # app working directory
-
 networks:
     github_default:
         driver: bridge
         dns:
             - 192.168.4.61
             - 1.1.1.1
-
-volumes:
-    homarr-appdata:
-    config:
-    work:

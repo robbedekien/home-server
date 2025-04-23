@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+    adguardhome:
+        container_name: adguard
+        image: adguard/adguardhome
+        ports:
+            - 53:53/tcp # plain dns over tcp
+            - 53:53/udp # plain dns over udp
+            - 8040:80/tcp # http web interface
+            - 3000:3000/tcp # initial setup web interface
+        volumes:
+            - config:/opt/adguardhome/conf # app configuration
+            - work:/opt/adguardhome/work # app working directory
+
+volumes:
+    config:
+    work:
