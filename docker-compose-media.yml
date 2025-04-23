@@ -16,6 +16,9 @@ services:
             - '32412:32412/udp'
             - '32413:32413/udp'
             - '32414:32414/udp'
+        dns:
+            - 192.168.4.61
+            - 1.1.1.1
         environment:
             # Replace 1000 with your actual user and group ID.
             # Find them by running `id -u` and `id -g` in your terminal.
@@ -47,6 +50,9 @@ services:
             - /volume2/docker/downloads:/downloads
         ports:
             - '7878:7878'
+        dns:
+            - 192.168.4.61
+            - 1.1.1.1
         restart: unless-stopped
 
     sonarr:
@@ -62,6 +68,9 @@ services:
             - /volume2/docker/downloads:/downloads
         ports:
             - '8989:8989'
+        dns:
+            - 192.168.4.61
+            - 1.1.1.1
         restart: unless-stopped
 
     prowlarr:
@@ -75,14 +84,14 @@ services:
             - /volume2/docker/services/prowlarr/config:/config
         ports:
             - '9696:9696'
+        dns:
+            - 192.168.4.61
+            - 1.1.1.1
         restart: unless-stopped
 
     overseerr:
         image: sctx/overseerr:latest
         container_name: overseerr
-        dns:
-            - 1.1.1.1
-            - 8.8.8.8
         environment:
             - PUID=1026
             - PGID=100
@@ -91,6 +100,9 @@ services:
             - /volume2/docker/services/overseerr/config:/app/config
         ports:
             - '5055:5055'
+        dns:
+            - 192.168.4.61
+            - 1.1.1.1
         restart: unless-stopped
 
     qbittorrent:
@@ -108,6 +120,9 @@ services:
             - '8080:8080'
             - '6881:6881'
             - '6881:6881/udp'
+        dns:
+            - 192.168.4.61
+            - 1.1.1.1
         restart: unless-stopped
 
     threadfin:
@@ -115,6 +130,9 @@ services:
         container_name: threadfin
         ports:
             - 34401:34400
+        dns:
+            - 192.168.4.61
+            - 1.1.1.1
         environment:
             - PUID=1026
             - PGID=100
@@ -136,6 +154,9 @@ services:
             - TZ=Etc/UTC
         ports:
             - 8181:8181
+        dns:
+            - 192.168.4.61
+            - 1.1.1.1
 
     sabnzbd:
         image: linuxserver/sabnzbd:latest
@@ -149,6 +170,9 @@ services:
             - /volume2/docker/downloads:/downloads
         ports:
             - 8088:8080
+        dns:
+            - 192.168.4.61
+            - 1.1.1.1
         restart: unless-stopped
 
     bazarr:
@@ -165,11 +189,17 @@ services:
             - /volume1/media/tv:/tv
         ports:
             - '6767:6767'
+        dns:
+            - 192.168.4.61
+            - 1.1.1.1
         restart: unless-stopped
 
 networks:
     github_default:
         driver: bridge
+        dns:
+            - 192.168.4.61
+            - 1.1.1.1
 
 volumes:
     threadfin-config:

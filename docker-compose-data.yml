@@ -33,6 +33,9 @@ services:
             timeout: 5s
             retries: 5
         logging: *default-logging
+        dns:
+            - 192.168.4.61
+            - 1.1.1.1
 
 volumes:
     mysql_data:

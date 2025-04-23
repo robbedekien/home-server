@@ -16,6 +16,9 @@ services:
             - '19132:19132/udp'
         volumes:
             - minecraft-data:/data
+        dns:
+            - 192.168.4.61
+            - 1.1.1.1
 
 volumes:
     minecraft-data:

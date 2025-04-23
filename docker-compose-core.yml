@@ -9,7 +9,9 @@ services:
         network_mode: host
         environment:
             - TUNNEL_TOKEN=${CLOUDFLARED_TUNNEL_TOKEN}
-
+        dns:
+            - 192.168.4.61
+            - 1.1.1.1
 networks:
     github_default:
         driver: bridge

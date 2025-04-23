@@ -7,6 +7,9 @@ services:
         restart: unless-stopped
         ports:
             - '7575:7575'
+        dns:
+            - 192.168.4.61
+            - 1.1.1.1
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
             - /volume2/docker/services/homarr/appdata:/appdata
@@ -26,6 +29,9 @@ services:
         restart: unless-stopped
         privileged: true
         network_mode: host
+        dns:
+            - 192.168.4.61
+            - 1.1.1.1
 
     adguardhome:
         container_name: adguard
@@ -35,6 +41,9 @@ services:
             - 53:53/udp # plain dns over udp
             - 8040:80/tcp # http web interface
             - 3000:3000/tcp # initial setup web interface
+        dns:
+            - 192.168.4.61
+            - 1.1.1.1
         volumes:
             - config:/opt/adguardhome/conf # app configuration
             - work:/opt/adguardhome/work # app working directory
@@ -42,6 +51,9 @@ services:
 networks:
     github_default:
         driver: bridge
+        dns:
+            - 192.168.4.61
+            - 1.1.1.1
 
 volumes:
     homarr-appdata:
