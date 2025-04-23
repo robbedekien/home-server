@@ -12,6 +12,20 @@ services:
         dns:
             - 192.168.4.61
             - 1.1.1.1
+    ddns:
+        image: favonia/cloudflare-ddns:latest
+        container_name: cloudflare-ddns
+        # network_mode: host # This bypasses network isolation and makes IPv6 easier (optional; see below)
+        restart: always
+        user: '1000:1000' # Run the updater with specific user and group IDs (in that order).
+        read_only: true # Make the container filesystem read-only (optional but recommended)
+        cap_drop: [all] # Drop all Linux capabilities (optional but recommended)
+        security_opt: [no-new-privileges:true] # Another protection to restrict superuser privileges (optional but recommended)
+        environment:
+            - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+            - DOMAINS=mc.robbedekien.be,mc-console.home.robbedekien.be
+            - PROXIED=true
+            - IP6_PROVIDER=none
 networks:
     github_default:
         driver: bridge
