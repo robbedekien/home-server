@@ -148,9 +148,9 @@ services:
             - 7095:7095
             - 7096:7096
         environment:
-            - PUID: 1026
-            - PGID: 100
-            - TZ: Etc/UTC
+            - PUID=1026
+            - PGID=100
+            - TZ=Etc/UTC
         volumes:
             - /volume2/docker/services/streammaster/config:/config
             - /volume2/docker/services/streammaster/tv-logos:/config/tv-logos
