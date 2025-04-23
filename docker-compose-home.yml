@@ -36,6 +36,3 @@ services:
 networks:
     github_default:
         driver: bridge
-        dns:
-            - 192.168.4.61
-            - 1.1.1.1
