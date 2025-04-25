@@ -101,8 +101,8 @@ services:
         ports:
             - '5055:5055'
         dns:
-            - 192.168.4.61
             - 1.1.1.1
+            - 8.8.8.8
         restart: unless-stopped
 
     qbittorrent:
