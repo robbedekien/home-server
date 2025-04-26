@@ -5,7 +5,7 @@ services:
         container_name: minecraft
         image: itzg/minecraft-server
         environment:
-            MEMORY: '4G'
+            MEMORY: '8G'
             EULA: 'true'
             TYPE: 'PAPER'
             PLUGINS: |
