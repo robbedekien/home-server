@@ -10,8 +10,8 @@ services:
       context: .
     image: invoiceninja/invoiceninja-debian:${TAG:-latest}
     restart: unless-stopped
-    expose:
-      - "9000"
+    ports:
+      - "9000:9000"
     environment:
       - APP_ENV=${APP_ENV}
       - APP_URL=${APP_URL}
