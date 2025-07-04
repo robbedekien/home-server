@@ -1,219 +1,256 @@
-version: '3.8'
+version: "3.8"
 
 services:
-    plex:
-        image: linuxserver/plex:latest
-        container_name: plex
-        # Using host network mode is often easier for Plex discovery on a local network.
-        # Alternatively, you could use bridge mode and map ports:
-        ports:
-            - '32400:32400/tcp'
-            #   - "3005:3005/tcp"
-            #   - "1900:1900/udp"
-            - '8324:8324/tcp'
-            - '32469:32469/tcp'
-            - '32410:32410/udp'
-            - '32412:32412/udp'
-            - '32413:32413/udp'
-            - '32414:32414/udp'
-        dns:
-            - 192.168.4.61
-            - 1.1.1.1
-        environment:
-            # Replace 1000 with your actual user and group ID.
-            # Find them by running `id -u` and `id -g` in your terminal.
-            - PUID=1026
-            - PGID=100
-            - VERSION=docker
-            # Optional: Claim token for headless setup.
-            # Get one from https://www.plex.tv/claim and paste it here if needed.
-            # - PLEX_CLAIM=YOUR_CLAIM_TOKEN
-        volumes:
-            # Persist Plex configuration
-            - /volume2/docker/services/plex/config:/config
-            # Mount your media libraries (adjust paths if your 'data' dir is elsewhere)
-            - /volume1/media/tv:/data/tvshows
-            - /volume1/media/movies:/data/movies
-            # Add more volumes here for other media types like music or photos
-        restart: unless-stopped
+  plex:
+    image: linuxserver/plex:latest
+    container_name: plex
+    # Using host network mode is often easier for Plex discovery on a local network.
+    # Alternatively, you could use bridge mode and map ports:
+    ports:
+      - "32400:32400/tcp"
+      #   - "3005:3005/tcp"
+      #   - "1900:1900/udp"
+      - "8324:8324/tcp"
+      - "32469:32469/tcp"
+      - "32410:32410/udp"
+      - "32412:32412/udp"
+      - "32413:32413/udp"
+      - "32414:32414/udp"
+    dns:
+      - 192.168.4.61
+      - 1.1.1.1
+    environment:
+      # Replace 1000 with your actual user and group ID.
+      # Find them by running `id -u` and `id -g` in your terminal.
+      - PUID=1026
+      - PGID=100
+      - VERSION=docker
+      # Optional: Claim token for headless setup.
+      # Get one from https://www.plex.tv/claim and paste it here if needed.
+      # - PLEX_CLAIM=YOUR_CLAIM_TOKEN
+    volumes:
+      # Persist Plex configuration
+      - /volume2/docker/services/plex/config:/config
+      # Mount your media libraries (adjust paths if your 'data' dir is elsewhere)
+      - /volume1/media/tv:/data/tvshows
+      - /volume1/media/movies:/data/movies
+      # Add more volumes here for other media types like music or photos
+    restart: unless-stopped
 
-    radarr:
-        image: linuxserver/radarr:latest
-        container_name: radarr
-        environment:
-            - PUID=1026
-            - PGID=100
-            - TZ=Etc/UTC
-        volumes:
-            - /volume2/docker/services/radarr/config:/config
-            - /volume1/media/movies:/movies
-            - /volume2/docker/downloads:/downloads
-        ports:
-            - '7878:7878'
-        dns:
-            - 192.168.4.61
-            - 1.1.1.1
-        restart: unless-stopped
+  radarr:
+    image: linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1026
+      - PGID=100
+      - TZ=Etc/UTC
+    volumes:
+      - /volume2/docker/services/radarr/config:/config
+      - /volume1/media/movies:/movies
+      - /volume2/docker/downloads:/downloads
+    ports:
+      - "7878:7878"
+    dns:
+      - 192.168.4.61
+      - 1.1.1.1
+    restart: unless-stopped
 
-    sonarr:
-        image: linuxserver/sonarr:latest
-        container_name: sonarr
-        environment:
-            - PUID=1026
-            - PGID=100
-            - TZ=Etc/UTC
-        volumes:
-            - /volume2/docker/services/sonarr/config:/config
-            - /volume1/media/tv:/tv
-            - /volume2/docker/downloads:/downloads
-        ports:
-            - '8989:8989'
-        dns:
-            - 192.168.4.61
-            - 1.1.1.1
-        restart: unless-stopped
+  sonarr:
+    image: linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1026
+      - PGID=100
+      - TZ=Etc/UTC
+    volumes:
+      - /volume2/docker/services/sonarr/config:/config
+      - /volume1/media/tv:/tv
+      - /volume2/docker/downloads:/downloads
+    ports:
+      - "8989:8989"
+    dns:
+      - 192.168.4.61
+      - 1.1.1.1
+    restart: unless-stopped
 
-    prowlarr:
-        image: linuxserver/prowlarr:latest
-        container_name: prowlarr
-        environment:
-            - PUID=1026
-            - PGID=100
-            - TZ=Etc/UTC
-        volumes:
-            - /volume2/docker/services/prowlarr/config:/config
-        ports:
-            - '9696:9696'
-        dns:
-            - 192.168.4.61
-            - 1.1.1.1
-        restart: unless-stopped
+  prowlarr:
+    image: linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=1026
+      - PGID=100
+      - TZ=Etc/UTC
+    volumes:
+      - /volume2/docker/services/prowlarr/config:/config
+    ports:
+      - "9696:9696"
+    dns:
+      - 192.168.4.61
+      - 1.1.1.1
+    restart: unless-stopped
 
-    overseerr:
-        image: sctx/overseerr:latest
-        container_name: overseerr
-        environment:
-            - PUID=1026
-            - PGID=100
-            - TZ=Etc/UTC
-        volumes:
-            - /volume2/docker/services/overseerr/config:/app/config
-        ports:
-            - '5055:5055'
-        dns:
-            - 1.1.1.1
-            - 8.8.8.8
-        restart: unless-stopped
+  overseerr:
+    image: sctx/overseerr:latest
+    container_name: overseerr
+    environment:
+      - PUID=1026
+      - PGID=100
+      - TZ=Etc/UTC
+    volumes:
+      - /volume2/docker/services/overseerr/config:/app/config
+    ports:
+      - "5055:5055"
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    restart: unless-stopped
 
-    qbittorrent:
-        image: linuxserver/qbittorrent:latest
-        container_name: qbittorrent
-        environment:
-            - PUID=1026
-            - PGID=100
-            - TZ=Etc/UTC
-            - WEBUI_PORT=8080
-        volumes:
-            - /volume2/docker/services/qbittorrent/config:/config
-            - /volume2/docker/downloads:/downloads
-        ports:
-            - '8080:8080'
-            - '6881:6881'
-            - '6881:6881/udp'
-        dns:
-            - 192.168.4.61
-            - 1.1.1.1
-        restart: unless-stopped
+  qbittorrent:
+    image: linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=1026
+      - PGID=100
+      - TZ=Etc/UTC
+      - WEBUI_PORT=8080
+    volumes:
+      - /volume2/docker/services/qbittorrent/config:/config
+      - /volume2/docker/downloads:/downloads
+    ports:
+      - "8080:8080"
+      - "6881:6881"
+      - "6881:6881/udp"
+    dns:
+      - 192.168.4.61
+      - 1.1.1.1
+    restart: unless-stopped
 
-    threadfin:
-        image: fyb3roptik/threadfin:latest
-        container_name: threadfin
-        ports:
-            - 34401:34400
-        dns:
-            - 192.168.4.61
-            - 1.1.1.1
-        environment:
-            - PUID=1026
-            - PGID=100
-            - TZ=Etc/UTC
-        volumes:
-            - threadfin-config:/config
-            - /volume2/docker/data/temp:/tmp/threadfin:rw
-        restart: unless-stopped
-    streammaster:
-        image: ghcr.io/carlreid/streammaster:latest
-        container_name: streammaster
-        ports:
-            - 7095:7095
-            - 7096:7096
-        dns:
-            - 192.168.4.61
-            - 1.1.1.1
-        environment:
-            - PUID=1026
-            - PGID=100
-            - TZ=Etc/UTC
-        volumes:
-            - /volume2/docker/services/streammaster/config:/config
-            - /volume2/docker/services/streammaster/tv-logos:/config/tv-logos
-        restart: unless-stopped
+  threadfin:
+    image: fyb3roptik/threadfin:latest
+    container_name: threadfin
+    ports:
+      - 34401:34400
+    dns:
+      - 192.168.4.61
+      - 1.1.1.1
+    environment:
+      - PUID=1026
+      - PGID=100
+      - TZ=Etc/UTC
+    volumes:
+      - threadfin-config:/config
+      - /volume2/docker/data/temp:/tmp/threadfin:rw
+    restart: unless-stopped
+  streammaster:
+    image: ghcr.io/carlreid/streammaster:latest
+    container_name: streammaster
+    ports:
+      - 7095:7095
+      - 7096:7096
+    dns:
+      - 192.168.4.61
+      - 1.1.1.1
+    environment:
+      - PUID=1026
+      - PGID=100
+      - TZ=Etc/UTC
+    volumes:
+      - /volume2/docker/services/streammaster/config:/config
+      - /volume2/docker/services/streammaster/tv-logos:/config/tv-logos
+    restart: unless-stopped
 
-    tautulli:
-        image: ghcr.io/tautulli/tautulli
-        container_name: tautulli
-        restart: unless-stopped
-        volumes:
-            - /volume2/docker/services/tautulli/config:/config
-        environment:
-            - PUID=1026
-            - PGID=100
-            - TZ=Etc/UTC
-        ports:
-            - 8181:8181
-        dns:
-            - 192.168.4.61
-            - 1.1.1.1
+  tautulli:
+    image: ghcr.io/tautulli/tautulli
+    container_name: tautulli
+    restart: unless-stopped
+    volumes:
+      - /volume2/docker/services/tautulli/config:/config
+    environment:
+      - PUID=1026
+      - PGID=100
+      - TZ=Etc/UTC
+    ports:
+      - 8181:8181
+    dns:
+      - 192.168.4.61
+      - 1.1.1.1
 
-    sabnzbd:
-        image: linuxserver/sabnzbd:latest
-        container_name: sabnzbd
-        environment:
-            - PUID=1026
-            - PGID=100
-            - TZ=Etc/UTC
-        volumes:
-            - /volume2/docker/services/sabnzbd/config:/config
-            - /volume2/docker/downloads:/downloads
-        ports:
-            - 8088:8080
-        dns:
-            - 192.168.4.61
-            - 1.1.1.1
-        restart: unless-stopped
+  sabnzbd:
+    image: linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    environment:
+      - PUID=1026
+      - PGID=100
+      - TZ=Etc/UTC
+    volumes:
+      - /volume2/docker/services/sabnzbd/config:/config
+      - /volume2/docker/downloads:/downloads
+    ports:
+      - 8088:8080
+    dns:
+      - 192.168.4.61
+      - 1.1.1.1
+    restart: unless-stopped
 
-    bazarr:
-        image: linuxserver/bazarr:latest
-        container_name: bazarr
-        environment:
-            - PUID=1026
-            - PGID=100
-            - TZ=Etc/UTC
-        volumes:
-            - /volume2/docker/services/bazarr/config:/config
-            # Mount movie and TV show folders for subtitle management
-            - /volume1/media/movies:/movies
-            - /volume1/media/tv:/tv
-        ports:
-            - '6767:6767'
-        dns:
-            - 192.168.4.61
-            - 1.1.1.1
-        restart: unless-stopped
+  bazarr:
+    image: linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=1026
+      - PGID=100
+      - TZ=Etc/UTC
+    volumes:
+      - /volume2/docker/services/bazarr/config:/config
+      # Mount movie and TV show folders for subtitle management
+      - /volume1/media/movies:/movies
+      - /volume1/media/tv:/tv
+    ports:
+      - "6767:6767"
+    dns:
+      - 192.168.4.61
+      - 1.1.1.1
+    restart: unless-stopped
+
+  posteria:
+    image: bozodev/posteria:latest
+    container_name: posteria
+    ports:
+      - "1818:80"
+    environment:
+      - SITE_TITLE=Posteria
+
+      - AUTH_USERNAME=robbedekien # Change this!
+      - AUTH_PASSWORD=${POSTERIA_PASSWORD} # Change this!
+      - SESSION_DURATION=3600 # In seconds
+      - AUTH_BYPASS=false # DO NOT USE if you expose Posteria outside your local network
+
+      - IMAGES_PER_PAGE=24
+      - MAX_FILE_SIZE=5242880 # In bytes
+
+      - PLEX_SERVER_URL=
+      - PLEX_TOKEN=
+      - PLEX_REMOVE_OVERLAY_LABEL=false # Set to true for Kometa compatibility
+
+      - IGNORE_ARTICLES_IN_SORT=true # Set to false to sort with articles (A, An, The) included
+      - SORT_BY_DATE_ADDED=true # Set to true to sort by Recently Added date in Plex instead of Alphabetically
+
+      - AUTO_IMPORT_ENABLED=true # Enable/disable auto-import
+      - AUTO_IMPORT_SCHEDULE=1h # Schedule 24h, 12h, 6h, 3h, 1h
+      - AUTO_IMPORT_MOVIES=true # Import Movie posters
+      - AUTO_IMPORT_SHOWS=true # Import TV Show posters
+      - AUTO_IMPORT_SEASONS=true # Import TV season posters
+      - AUTO_IMPORT_COLLECTIONS=true # Import Collection posters
+    volumes:
+      - /volume2/docker/services/posteria/posters/movies:/var/www/html/posters/movies
+      - /volume2/docker/services/posteria/posters/tv-shows:/var/www/html/posters/tv-shows
+      - /volume2/docker/services/posteria/posters/tv-seasons:/var/www/html/posters/tv-seasons
+      - /volume2/docker/services/posteria/posters/collections:/var/www/html/posters/collections
+      - /volume2/docker/services/posteria/data:/var/www/html/data # Logs are found here
+    restart: unless-stopped
 
 networks:
-    github_default:
-        driver: bridge
+  github_default:
+    driver: bridge
 
 volumes:
-    threadfin-config:
+  threadfin-config:
