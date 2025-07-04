@@ -227,8 +227,8 @@ services:
       - IMAGES_PER_PAGE=24
       - MAX_FILE_SIZE=5242880 # In bytes
 
-      - PLEX_SERVER_URL=
-      - PLEX_TOKEN=
+      - PLEX_SERVER_URL=https://plex.robbedekien.be
+      - PLEX_TOKEN=${PLEX_TOKEN}
       - PLEX_REMOVE_OVERLAY_LABEL=false # Set to true for Kometa compatibility
 
       - IGNORE_ARTICLES_IN_SORT=true # Set to false to sort with articles (A, An, The) included
