@@ -211,43 +211,6 @@ services:
       - 1.1.1.1
     restart: unless-stopped
 
-  posteria:
-    image: bozodev/posteria:latest
-    container_name: posteria
-    ports:
-      - "1818:80"
-    environment:
-      - SITE_TITLE=Posteria
-
-      - AUTH_USERNAME=robbedekien # Change this!
-      - AUTH_PASSWORD=${POSTERIA_PASSWORD} # Change this!
-      - SESSION_DURATION=3600 # In seconds
-      - AUTH_BYPASS=false # DO NOT USE if you expose Posteria outside your local network
-
-      - IMAGES_PER_PAGE=24
-      - MAX_FILE_SIZE=5242880 # In bytes
-
-      - PLEX_SERVER_URL=https://192.168.4.61:32400
-      - PLEX_TOKEN=${PLEX_TOKEN}
-      - PLEX_REMOVE_OVERLAY_LABEL=false # Set to true for Kometa compatibility
-
-      - IGNORE_ARTICLES_IN_SORT=true # Set to false to sort with articles (A, An, The) included
-      - SORT_BY_DATE_ADDED=true # Set to true to sort by Recently Added date in Plex instead of Alphabetically
-
-      - AUTO_IMPORT_ENABLED=true # Enable/disable auto-import
-      - AUTO_IMPORT_SCHEDULE=1h # Schedule 24h, 12h, 6h, 3h, 1h
-      - AUTO_IMPORT_MOVIES=true # Import Movie posters
-      - AUTO_IMPORT_SHOWS=true # Import TV Show posters
-      - AUTO_IMPORT_SEASONS=true # Import TV season posters
-      - AUTO_IMPORT_COLLECTIONS=true # Import Collection posters
-    volumes:
-      - /volume2/docker/services/posteria/posters/movies:/var/www/html/posters/movies
-      - /volume2/docker/services/posteria/posters/tv-shows:/var/www/html/posters/tv-shows
-      - /volume2/docker/services/posteria/posters/tv-seasons:/var/www/html/posters/tv-seasons
-      - /volume2/docker/services/posteria/posters/collections:/var/www/html/posters/collections
-      - /volume2/docker/services/posteria/data:/var/www/html/data # Logs are found here
-    restart: unless-stopped
-
 networks:
   github_default:
     driver: bridge
