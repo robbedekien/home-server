@@ -5,16 +5,14 @@ FROM php:${PHP}-fpm AS prepare-app
 # Install curl first
 RUN apt-get update && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
-    
-USER www-data
 
 RUN curl -sL "https://github.com/invoiceninja/invoiceninja/releases/latest/download/invoiceninja.tar.gz" | \
     tar -xz -C /var/www/html \
     && ln -s /var/www/html/resources/views/react/index.blade.php /var/www/html/public/index.html \
     && php artisan storage:link \
-    # Workaround for application updates
+    && chown -R www-data:www-data /var/www/html \
     && mv /var/www/html/public /tmp/public
-
+    
 # ==================
 # InvoiceNinja image
 # ==================
