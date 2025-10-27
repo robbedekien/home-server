@@ -2,6 +2,10 @@ ARG PHP=8.4
 
 FROM php:${PHP}-fpm AS prepare-app
 
+# Install curl first
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+    
 USER www-data
 
 RUN curl -sL "https://github.com/invoiceninja/invoiceninja/releases/latest/download/invoiceninja.tar.gz" | \
