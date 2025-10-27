@@ -2,13 +2,12 @@ ARG PHP=8.3
 
 FROM php:${PHP}-fpm AS prepare-app
 
-USER www-data
-
 RUN curl -sL "https://github.com/invoiceninja/invoiceninja/releases/latest/download/invoiceninja.tar.gz" | \
     tar -xz -C /var/www/html \
     && ln -s /var/www/html/resources/views/react/index.blade.php /var/www/html/public/index.html \
+    && cd /var/www/html \
     && php artisan storage:link \
-    # Workaround for application updates
+    && chown -R www-data:www-data /var/www/html \
     && mv /var/www/html/public /tmp/public
 
 # ==================
