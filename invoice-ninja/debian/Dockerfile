@@ -1,13 +1,14 @@
-ARG PHP=8.3
+ARG PHP=8.4
 
 FROM php:${PHP}-fpm AS prepare-app
+
+USER www-data
 
 RUN curl -sL "https://github.com/invoiceninja/invoiceninja/releases/latest/download/invoiceninja.tar.gz" | \
     tar -xz -C /var/www/html \
     && ln -s /var/www/html/resources/views/react/index.blade.php /var/www/html/public/index.html \
-    && cd /var/www/html \
     && php artisan storage:link \
-    && chown -R www-data:www-data /var/www/html \
+    # Workaround for application updates
     && mv /var/www/html/public /tmp/public
 
 # ==================
@@ -17,11 +18,12 @@ FROM php:${PHP}-fpm
 
 # PHP modules
 ARG php_require="bcmath gd mbstring pdo_mysql zip"
-ARG php_suggest="exif imagick intl pcntl soap saxon-12.5.0"
+ARG php_suggest="exif imagick intl pcntl saxon soap"
 ARG php_extra="opcache"
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    libfcgi-bin \
     mariadb-client \
     gpg \
     supervisor \
@@ -40,7 +42,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get install -y --no-install-recommends google-chrome-stable; \
     elif [ "$(dpkg --print-architecture)" = "arm64" ]; then \
     apt-get install -y --no-install-recommends \
-    chromium; \        
+    chromium; \
     fi \
     # Create config directory for chromium/google-chrome-stable
     && mkdir /var/www/.config \
@@ -66,6 +68,9 @@ COPY php/php.ini /usr/local/etc/php/conf.d/invoiceninja.ini
 
 COPY php/php-fpm.conf /usr/local/etc/php-fpm.d/invoiceninja.conf
 
+# Workaround: Disable SSL for mariadb-client for compatibility with MySQL
+RUN echo "skip-ssl = true" >> /etc/mysql/mariadb.conf.d/50-client.cnf
+
 # Setup supervisor
 COPY supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
@@ -77,8 +82,8 @@ COPY --from=prepare-app /tmp/public /tmp/public
 COPY --chmod=0755 scripts/init.sh /usr/local/bin/init.sh
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-    CMD pgrep -f "php-fpm: master process"
+HEALTHCHECK --start-period=100s \
+    CMD REMOTE_ADDR=127.0.0.1 REQUEST_URI=/health REQUEST_METHOD=GET SCRIPT_FILENAME=/var/www/html/public/index.php cgi-fcgi -bind -connect 127.0.0.1:9000 | grep '{"status":"ok","message":"API is healthy"}'
 
 ENTRYPOINT ["/usr/local/bin/init.sh"]
-CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
