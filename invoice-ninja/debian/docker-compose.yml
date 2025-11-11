@@ -53,7 +53,6 @@ services:
       # - ./php/php.ini:/usr/local/etc/php/conf.d/invoiceninja.ini:ro
       # - ./php/php-fpm.conf:/usr/local/etc/php-fpm.d/invoiceninja.conf:ro
       # - ./supervisor/supervisord.conf:/etc/supervisor/conf.d/supervisord.conf:ro
-      - app_public:/var/www/html/public
       - app_storage:/var/www/html/storage
     networks:
       - app-network
@@ -71,7 +70,6 @@ services:
       - "8585:80"
     volumes:
       - /volume2/docker/services/invoice-ninja/nginx:/etc/nginx/conf.d:ro
-      - app_public:/var/www/html/public:ro
       - app_storage:/var/www/html/storage:ro
     networks:
       - app-network
@@ -128,8 +126,6 @@ networks:
     driver: bridge
 
 volumes:
-  app_public:
-    driver: local
   app_storage:
     driver: local
   mysql_data:

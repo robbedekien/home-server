@@ -8,7 +8,10 @@
     "logs": "docker compose logs -f",
     "plex:logs": "docker compose logs -f plex",
     "plex:claim": "echo 'Get claim token from https://www.plex.tv/claim'",
-    "id": "echo \"UID=$(id -u) GID=$(id -g)\""
+    "id": "echo \"UID=$(id -u) GID=$(id -g)\"",
+    "invoice:build": "cd invoice-ninja/debian && docker build --platform linux/amd64 -t robbedekien/robbedekien-invoice-ninja:latest .",
+    "invoice:push": "docker push robbedekien/robbedekien-invoice-ninja:latest",
+    "invoice:build-push": "npm run invoice:build && npm run invoice:push"
   },
   "keywords": [
     "plex",

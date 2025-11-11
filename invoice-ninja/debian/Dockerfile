@@ -76,7 +76,7 @@ COPY supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Setup InvoiceNinja
 COPY --from=prepare-app /var/www/html /var/www/html
-COPY --from=prepare-app /tmp/public /tmp/public
+COPY --from=prepare-app /tmp/public /var/www/html/public
 
 # Add initialization script
 COPY --chmod=0755 scripts/init.sh /usr/local/bin/init.sh
