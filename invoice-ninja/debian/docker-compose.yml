@@ -1,12 +1,8 @@
-x-logging: &default-logging
-  options:
-    max-size: "10m"
-    max-file: "3"
-  driver: json-file
-
 services:
   app:
-    image: robbedekien/robbedekien-invoice-ninja:latest
+    build:
+      context: .
+    image: invoiceninja/invoiceninja-debian:${TAG:-latest}
     restart: unless-stopped
     environment:
       - APP_ENV=${APP_ENV}
@@ -53,15 +49,13 @@ services:
       # - ./php/php.ini:/usr/local/etc/php/conf.d/invoiceninja.ini:ro
       # - ./php/php-fpm.conf:/usr/local/etc/php-fpm.d/invoiceninja.conf:ro
       # - ./supervisor/supervisord.conf:/etc/supervisor/conf.d/supervisord.conf:ro
+      - app_public:/var/www/html/public
       - app_storage:/var/www/html/storage
-    networks:
-      - app-network
     depends_on:
       mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
-    logging: *default-logging
 
   nginx:
     image: nginx:alpine
@@ -70,12 +64,11 @@ services:
       - "8585:80"
     volumes:
       - /volume2/docker/services/invoice-ninja/nginx:/etc/nginx/conf.d:ro
+      - app_public:/var/www/html/public:ro
       - app_storage:/var/www/html/storage:ro
-    networks:
-      - app-network
     depends_on:
-      - app
-    logging: *default-logging
+      app:
+        condition: service_healthy
 
   mysql:
     image: mysql:8
@@ -89,8 +82,6 @@ services:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
-    networks:
-      - app-network
     healthcheck:
       test:
         [
@@ -102,30 +93,18 @@ services:
           "-u${MYSQL_USER}",
           "-p${MYSQL_PASSWORD}",
         ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    logging: *default-logging
 
   redis:
     image: redis:alpine
     restart: unless-stopped
     volumes:
       - redis_data:/data
-    networks:
-      - app-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    logging: *default-logging
-
-networks:
-  app-network:
-    driver: bridge
 
 volumes:
+  app_public:
+    driver: local
   app_storage:
     driver: local
   mysql_data:
