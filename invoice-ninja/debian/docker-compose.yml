@@ -1,9 +1,14 @@
+x-resolver: &default-dns
+  - 192.168.4.61
+  - 1.1.1.1
+
 services:
   app:
     build:
       context: .
     image: invoiceninja/invoiceninja-debian:${TAG:-latest}
     restart: unless-stopped
+    dns: *default-dns
     environment:
       - APP_ENV=${APP_ENV}
       - APP_URL=${APP_URL}
@@ -60,6 +65,7 @@ services:
   nginx:
     image: nginx:alpine
     restart: unless-stopped
+    dns: *default-dns
     ports:
       - "8585:80"
     volumes:
@@ -73,6 +79,7 @@ services:
   mysql:
     image: mysql:8
     restart: unless-stopped
+    dns: *default-dns
     env_file:
       - stack.env
     environment:
@@ -97,6 +104,7 @@ services:
   redis:
     image: redis:alpine
     restart: unless-stopped
+    dns: *default-dns
     volumes:
       - redis_data:/data
     healthcheck:
