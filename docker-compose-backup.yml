@@ -1,0 +1,52 @@
+version: "3.8"
+
+services:
+
+  # ===========================
+  #   MYSQL DATABASE BACKUP
+  # ===========================
+  mysql-backup:
+    image: tiredofit/db-backup
+    container_name: backup_mysql
+    environment:
+      - DB_TYPE=mysql
+      - DB_HOST=mysql                # working now because we’re on debian_default
+      - DB_USER=${DB_USERNAME}
+      - DB_PASS=${DB_PASSWORD}
+      - DB_NAME=${DB_DATABASE}
+      - DB_DUMP_FREQ=1440            # daily
+      - DB_CLEANUP_TIME=10080        # keep 7 days
+      - COMPRESSION=gzip
+    volumes:
+      - /volume2/backups/invoiceninja/mysql:/backup
+    networks:
+      - debian_default
+    restart: unless-stopped
+
+
+  # ===========================
+  #   LARAVEL STORAGE BACKUP
+  # ===========================
+  storage-backup:
+    image: tiredofit/filesystem-backup
+    container_name: backup_storage
+    environment:
+      - BACKUP_METHOD=tar
+      - BACKUP_COMPRESSION=gzip
+      - BACKUP_CRON=0 3 * * *
+      - BACKUP_RETENTION=7
+    volumes:
+      - debian_app_storage:/source          
+      - /volume2/backups/invoiceninja/storage:/backup
+    networks:
+      - debian_default
+    restart: unless-stopped
+
+
+volumes:
+  debian_app_storage:
+    external: true
+
+networks:
+  debian_default:
+    external: true
