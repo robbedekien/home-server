@@ -18,7 +18,7 @@ services:
       - DB_CLEANUP_TIME=10080        # keep 7 days
       - COMPRESSION=gzip
     volumes:
-      - /volume2/backups/invoiceninja/mysql:/backup
+      - /volume2/docker/backups/invoiceninja/mysql:/backup
     networks:
       - debian_default
     restart: unless-stopped
