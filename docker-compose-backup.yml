@@ -8,7 +8,6 @@ services:
   mysql-backup:
     image: tiredofit/db-backup
     container_name: backup_mysql
-    user: "1026:100"
     environment:
       - DB_TYPE=mysql
       - DB_HOST=mysql                # working now because we’re on debian_default
@@ -18,6 +17,8 @@ services:
       - DB_DUMP_FREQ=1440            # daily
       - DB_CLEANUP_TIME=10080        # keep 7 days
       - COMPRESSION=gzip
+      - USER_DBBACKUP=1026
+      - GROUP_DBBACKUP=100
     volumes:
       - /volume2/docker/backups/invoiceninja/mysql:/backup
     networks:
@@ -32,7 +33,6 @@ services:
     image: offen/docker-volume-backup:v2                  # use a fixed release tag (v2) for stability
     container_name: storage-backup
     restart: always
-    user: "1026:100"
     environment:
       BACKUP_CRON_EXPRESSION: "0 2 * * *"                 # run daily at 2:00 AM
       BACKUP_RETENTION_DAYS: "7"                          # retain backups for 7 days
