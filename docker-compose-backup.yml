@@ -31,6 +31,7 @@ services:
     image: offen/docker-volume-backup:v2                  # use a fixed release tag (v2) for stability
     container_name: storage-backup
     restart: always
+    user: "1026:100"
     environment:
       BACKUP_CRON_EXPRESSION: "0 2 * * *"                 # run daily at 2:00 AM
       BACKUP_RETENTION_DAYS: "7"                          # retain backups for 7 days
