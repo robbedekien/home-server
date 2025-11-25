@@ -8,6 +8,7 @@ services:
   mysql-backup:
     image: tiredofit/db-backup
     container_name: backup_mysql
+    user: "1026:100"
     environment:
       - DB_TYPE=mysql
       - DB_HOST=mysql                # working now because we’re on debian_default
