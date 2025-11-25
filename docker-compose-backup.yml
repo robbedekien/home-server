@@ -28,19 +28,17 @@ services:
   #   LARAVEL STORAGE BACKUP
   # ===========================
   storage-backup:
-    image: tiredofit/filesystem-backup
-    container_name: backup_storage
+    image: offen/docker-volume-backup:v2                  # use a fixed release tag (v2) for stability
+    container_name: storage-backup
+    restart: always
     environment:
-      - BACKUP_METHOD=tar
-      - BACKUP_COMPRESSION=gzip
-      - BACKUP_CRON=0 3 * * *
-      - BACKUP_RETENTION=7
+      BACKUP_CRON_EXPRESSION: "0 2 * * *"                 # run daily at 2:00 AM
+      BACKUP_RETENTION_DAYS: "7"                          # retain backups for 7 days
+      BACKUP_FILENAME: "storage-backup-%Y-%m-%d.tar.gz"   # daily archive name format
+      BACKUP_PRUNING_PREFIX: "storage-backup-"            # only delete files with this prefix
     volumes:
-      - debian_app_storage:/source          
-      - /volume2/backups/invoiceninja/storage:/backup
-    networks:
-      - debian_default
-    restart: unless-stopped
+      - debian_app_storage:/backup:ro                     # **Source**: Laravel storage directory (read-only)
+      - /volume2/backups/invoiceninja/storage:/archive    # **Destination**: Host backup folder
 
 
 volumes:
