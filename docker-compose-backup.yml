@@ -38,7 +38,7 @@ services:
       BACKUP_PRUNING_PREFIX: "storage-backup-"            # only delete files with this prefix
     volumes:
       - debian_app_storage:/backup:ro                     # **Source**: Laravel storage directory (read-only)
-      - /volume2/backups/invoiceninja/storage:/archive    # **Destination**: Host backup folder
+      - /volume2/docker/backups/invoiceninja/storage:/archive    # **Destination**: Host backup folder
 
 
 volumes:
