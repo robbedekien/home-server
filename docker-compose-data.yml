@@ -45,6 +45,7 @@ services:
     volumes:
       - /volume1/media/books:/srv/books:ro
       - /volume2/docker/services/filebrowser/config:/config
+      - /volume2/docker/services/filebrowser/database:/database
     ports:
       - "8089:80"
     restart: unless-stopped
