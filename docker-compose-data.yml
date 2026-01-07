@@ -46,7 +46,7 @@ services:
       - PUID=1026
       - PGID=100
     volumes:
-      - /volume1/media/books:/srv/books:ro
+      - /volume1/media/books:/srv/books
       - /volume2/docker/services/filebrowser/config:/config
       - /volume2/docker/services/filebrowser/database:/database
     ports:
