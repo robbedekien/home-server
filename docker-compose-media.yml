@@ -55,6 +55,24 @@ services:
       - 1.1.1.1
     restart: unless-stopped
 
+  bookshelf:
+    image: ghcr.io/pennydreadful/bookshelf:hardcover-v0.4.20.91
+    container_name: bookshelf
+    environment:
+      - PUID=1026
+      - PGID=100
+      - TZ=Etc/UTC
+    volumes:
+      - /volume2/docker/services/bookshelf/config:/config
+      - /volume1/media/books:/books
+      - /volume2/docker/downloads:/downloads
+    ports:
+      - "8787:8787"
+    dns:
+      - 192.168.4.61
+      - 1.1.1.1
+    restart: unless-stopped
+
   sonarr:
     image: linuxserver/sonarr:latest
     container_name: sonarr
