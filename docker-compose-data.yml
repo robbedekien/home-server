@@ -42,6 +42,8 @@ services:
     user: "1026:100"
     environment:
       - FB_BASEURL=/books
+      - PUID=1026
+      - PGID=100
     volumes:
       - /volume1/media/books:/srv/books:ro
       - /volume2/docker/services/filebrowser/config:/config
