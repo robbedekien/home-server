@@ -1,41 +1,53 @@
-version: '3.8'
+version: "3.8"
 
 x-logging: &default-logging
-    options:
-        max-size: '10m'
-        max-file: '3'
-    driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+  driver: json-file
 
 services:
-    mysql:
-        container_name: mysql
-        image: mysql:8
-        restart: unless-stopped
-        environment:
-            MYSQL_DATABASE: ${DB_DATABASE}
-            MYSQL_USER: ${DB_USERNAME}
-            MYSQL_PASSWORD: ${DB_PASSWORD}
-            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-        volumes:
-            - mysql_data:/var/lib/mysql
-        healthcheck:
-            test:
-                [
-                    'CMD',
-                    'mysqladmin',
-                    'ping',
-                    '-h',
-                    'localhost',
-                    '-u${MYSQL_USER}',
-                    '-p${MYSQL_PASSWORD}',
-                ]
-            interval: 10s
-            timeout: 5s
-            retries: 5
-        logging: *default-logging
-        dns:
-            - 192.168.4.61
-            - 1.1.1.1
+  mysql:
+    container_name: mysql
+    image: mysql:8
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u${MYSQL_USER}",
+          "-p${MYSQL_PASSWORD}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+    dns:
+      - 192.168.4.61
+      - 1.1.1.1
+  filebrowser:
+    image: filebrowser/filebrowser:latest
+    container_name: filebrowser-books
+    user: "1026:100"
+    environment:
+      - FB_BASEURL=/books
+    volumes:
+      - /volume1/media/books:/srv/books:ro
+      - /volume2/docker/services/filebrowser/config:/config
+    ports:
+      - "8089:80"
+    restart: unless-stopped
 
 volumes:
-    mysql_data:
+  mysql_data:
