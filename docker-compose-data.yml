@@ -40,6 +40,7 @@ services:
     image: filebrowser/filebrowser:latest
     container_name: filebrowser-books
     user: "1026:100"
+    command: --port 8080
     environment:
       - FB_BASEURL=/books
       - PUID=1026
@@ -49,7 +50,7 @@ services:
       - /volume2/docker/services/filebrowser/config:/config
       - /volume2/docker/services/filebrowser/database:/database
     ports:
-      - "8089:80"
+      - "8089:8080"
     restart: unless-stopped
 
 volumes:
