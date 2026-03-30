@@ -20,5 +20,28 @@ services:
             - 192.168.4.61
             - 1.1.1.1
 
+    trek:
+        container_name: trek
+        image: mauriceboe/trek:latest
+        environment:
+            - NODE_ENV=production
+            - JWT_SECRET=${TREK_JWT_SECRET:-}
+            - PORT=3000
+        volumes:
+            - /volume2/docker/services/trek/data:/app/data
+            - /volume2/docker/services/trek/uploads:/app/uploads
+        ports:
+            - '3010:3000'
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 15s
+        dns:
+            - 192.168.4.61
+            - 1.1.1.1
+
 volumes:
     minecraft-data:
