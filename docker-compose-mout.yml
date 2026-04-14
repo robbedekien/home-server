@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  deemix:
+    image: ghcr.io/bambanah/deemix:latest
+    container_name: deemix
+    environment:
+      - PUID=1026
+      - PGID=100
+      - DEEMIX_SINGLE_USER=true
+    volumes:
+      - /volume2/docker/services/deemix/config:/config
+      - /volume1/media/music:/downloads
+    ports:
+      - "6595:6595"
+    dns:
+      - 192.168.4.61
+      - 1.1.1.1
+    restart: unless-stopped
+
