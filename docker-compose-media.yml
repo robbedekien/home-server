@@ -73,6 +73,24 @@ services:
       - 1.1.1.1
     restart: unless-stopped
 
+  bookshelf-audiobooks:
+    image: ghcr.io/pennydreadful/bookshelf:hardcover-v0.4.20.91
+    container_name: bookshelf-audiobooks
+    environment:
+      - PUID=1026
+      - PGID=100
+      - TZ=Etc/UTC
+    volumes:
+      - /volume2/docker/services/bookshelf-audiobooks/config:/config
+      - /volume1/media/audiobooks:/audiobooks
+      - /volume2/docker/downloads:/downloads
+    ports:
+      - "8788:8787"
+    dns:
+      - 192.168.4.61
+      - 1.1.1.1
+    restart: unless-stopped
+
   sonarr:
     image: linuxserver/sonarr:latest
     container_name: sonarr
