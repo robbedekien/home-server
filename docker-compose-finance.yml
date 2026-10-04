@@ -1,0 +1,47 @@
+version: "3.8"
+
+# Reached only through the Cloudflare tunnel (cloudflared runs on the host network),
+# so ports bind to 127.0.0.1: nothing on the LAN or the router can hit them directly.
+
+services:
+  actual:
+    image: actualbudget/actual-server:26.10.0
+    container_name: actual
+    user: "1026:100"
+    environment:
+      - ACTUAL_LOGIN_METHOD=password
+      - ACTUAL_ALLOWED_LOGIN_METHODS=password   # default also allows header/openid
+    volumes:
+      - /volume2/docker/services/actual/data:/data
+    ports:
+      - "127.0.0.1:5006:5006"
+    networks:
+      - finance
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    dns:
+      - 192.168.4.61
+      - 1.1.1.1
+    restart: unless-stopped
+
+  actual-backup:
+    image: offen/docker-volume-backup:v2.49.1
+    container_name: actual-backup
+    environment:
+      BACKUP_CRON_EXPRESSION: "30 3 * * *"
+      BACKUP_RETENTION_DAYS: "14"
+      BACKUP_FILENAME: "actual-%Y-%m-%d.tar.gz"
+      BACKUP_PRUNING_PREFIX: "actual-"
+      # Server DB holds the Enable Banking private key, which E2EE does not cover.
+      GPG_PASSPHRASE: ${ACTUAL_BACKUP_GPG_PASSPHRASE:?set in Portainer}
+    volumes:
+      # ponytail: copies SQLite live (no docker.sock to stop actual); 03:30 is idle. Mount the socket + stop-during-backup label if a restore ever comes back torn.
+      - /volume2/docker/services/actual/data:/backup/actual:ro
+      - /volume2/docker/backups/actual:/archive
+    restart: unless-stopped
+
+networks:
+  finance:
+    driver: bridge
