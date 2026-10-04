@@ -9,8 +9,16 @@ services:
     container_name: actual
     user: "1026:100"
     environment:
-      - ACTUAL_LOGIN_METHOD=password
-      - ACTUAL_ALLOWED_LOGIN_METHODS=password   # default also allows header/openid
+      # Per-user login via Cloudflare Access acting as OIDC provider (Access app "Actual SSO").
+      # First login becomes admin; the Access policy limits who can log in at all.
+      - ACTUAL_LOGIN_METHOD=openid
+      - ACTUAL_ALLOWED_LOGIN_METHODS=openid
+      - ACTUAL_OPENID_ENFORCE=true
+      - ACTUAL_USER_CREATION_MODE=login
+      - ACTUAL_OPENID_DISCOVERY_URL=https://robbedekien.cloudflareaccess.com/cdn-cgi/access/sso/oidc/dae408353f65ce8ab4120f5657d3055b6fc34ff33ae004ed14206c67cdf550e8
+      - ACTUAL_OPENID_CLIENT_ID=dae408353f65ce8ab4120f5657d3055b6fc34ff33ae004ed14206c67cdf550e8
+      - ACTUAL_OPENID_CLIENT_SECRET=${ACTUAL_OPENID_CLIENT_SECRET:?set in Portainer}
+      - ACTUAL_OPENID_SERVER_HOSTNAME=https://budget.robbedekien.be
     volumes:
       - /volume2/docker/services/actual/data:/data
     ports:
