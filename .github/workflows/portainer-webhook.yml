@@ -15,4 +15,4 @@ jobs:
                   curl --fail -X POST
                   -H "CF-Access-Client-Id: ${{ secrets.CF_ACCESS_CLIENT_ID }}"
                   -H "CF-Access-Client-Secret: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}"
-                  https://portainer.robbedekien.be/api/stacks/webhooks/f38e98b8-0d1c-45fd-a153-2bb88263dae2
+                  https://portainer.robbedekien.be/api/stacks/webhooks/068bb958-3b96-4e23-b29b-a2f87f1ed89e
