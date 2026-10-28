@@ -170,7 +170,7 @@ services:
     restart: unless-stopped
 
   qbittorrent:
-    image: linuxserver/qbittorrent:latest
+    image: linuxserver/qbittorrent:5.2.4 # MAM only allows 5.0.1-5.2.x; 5.3.0 is rejected
     container_name: qbittorrent
     environment:
       - PUID=1026
