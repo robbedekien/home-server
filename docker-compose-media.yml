@@ -94,7 +94,8 @@ services:
   # Self-hosted metadata for both bookshelf instances; the shared hardcover.bookinfo.pro search hangs.
   # Bookshelf reaches it at http://rreading-glasses:8788 (Settings > /settings/development).
   rreading-glasses:
-    image: blampe/rreading-glasses:hardcover
+    build: ./services/rreading-glasses # upstream + batch-size fix, see Dockerfile
+    image: rreading-glasses:batch5
     container_name: rreading-glasses
     entrypoint: ["/main", "serve"]
     mem_limit: 256m
