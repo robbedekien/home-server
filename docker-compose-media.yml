@@ -91,6 +91,34 @@ services:
       - 1.1.1.1
     restart: unless-stopped
 
+  # Self-hosted metadata for both bookshelf instances; the shared hardcover.bookinfo.pro search hangs.
+  # Bookshelf reaches it at http://rreading-glasses:8788 (Settings > /settings/development).
+  rreading-glasses:
+    image: blampe/rreading-glasses:hardcover
+    container_name: rreading-glasses
+    entrypoint: ["/main", "serve"]
+    mem_limit: 256m
+    environment:
+      HARDCOVER_AUTH: ${HARDCOVER_AUTH:?set in Portainer, "Bearer <token>"}
+      POSTGRES_HOST: rreading-glasses-db
+      POSTGRES_DATABASE: rreading-glasses
+      POSTGRES_USER: rreading-glasses
+      POSTGRES_PASSWORD: ${RREADING_GLASSES_DB_PASSWORD:?set in Portainer}
+    depends_on:
+      - rreading-glasses-db
+    restart: unless-stopped
+
+  rreading-glasses-db:
+    image: postgres:17
+    container_name: rreading-glasses-db
+    environment:
+      POSTGRES_USER: rreading-glasses
+      POSTGRES_PASSWORD: ${RREADING_GLASSES_DB_PASSWORD:?set in Portainer}
+      POSTGRES_DB: rreading-glasses
+    volumes:
+      - /volume2/docker/services/rreading-glasses/db:/var/lib/postgresql/data
+    restart: unless-stopped
+
   sonarr:
     image: linuxserver/sonarr:latest
     container_name: sonarr
