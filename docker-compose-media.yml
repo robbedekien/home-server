@@ -256,6 +256,22 @@ services:
       - 1.1.1.1
     restart: unless-stopped
 
+  # Removes, blocklists and re-searches stuck imports (exe fakes, "unable to determine if sample").
+  # Configure in the UI: Sonarr http://sonarr:8989, Radarr http://radarr:7878, qBittorrent http://qbittorrent:8080.
+  cleanuparr:
+    image: ghcr.io/cleanuparr/cleanuparr:latest
+    container_name: cleanuparr
+    environment:
+      - PORT=11011
+      - PUID=1026
+      - PGID=100
+      - TZ=Etc/UTC
+    volumes:
+      - /volume2/docker/services/cleanuparr/config:/config
+    ports:
+      - "11011:11011"
+    restart: unless-stopped
+
   bazarr:
     image: linuxserver/bazarr:latest
     container_name: bazarr
