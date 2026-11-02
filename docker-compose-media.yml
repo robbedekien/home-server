@@ -96,6 +96,7 @@ services:
   rreading-glasses:
     build: ./services/rreading-glasses # upstream + batch-size fix, see Dockerfile
     image: rreading-glasses:batch5
+    pull_policy: never # local build; a pull attempt aborts the whole stack deploy
     container_name: rreading-glasses
     entrypoint: ["/main", "serve"]
     mem_limit: 256m

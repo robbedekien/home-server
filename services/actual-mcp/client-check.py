@@ -47,7 +47,7 @@ with unittest.mock.patch("subprocess.run", side_effect=subprocess.CalledProcessE
 assert output.getvalue() == "" and "dummy-secret" not in errors.getvalue()
 codex = tomllib.loads((root / "codex.example.toml").read_text())["mcp_servers"]["actual"]
 claude = json.loads((root / "claude.example.json").read_text())["mcpServers"]["actual"]
-assert claude["type"] == "http" and claude["url"] == "https://actual-mcp.example.invalid/mcp"
+assert claude["type"] == "http" and claude["url"] == "https://actual-mcp.robbedekien.be/mcp"
 assert "client-headers.py" in claude["headersHelper"]
 assert codex["url"] == claude["url"]
 assert codex["http_headers_helper"] == claude["headersHelper"]

@@ -1,5 +1,5 @@
 [mcp_servers.actual]
-url = "https://actual-mcp.example.invalid/mcp"
-http_headers_helper = "python3 /Users/robbedekien/Projects/home-server/.claude/worktrees/finance-agent/services/actual-mcp/client-headers.py"
+url = "https://actual-mcp.robbedekien.be/mcp"
+http_headers_helper = "python3 /Users/robbedekien/Projects/home-server/services/actual-mcp/client-headers.py"
 startup_timeout_sec = 30
 tool_timeout_sec = 120

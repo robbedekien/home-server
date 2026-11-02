@@ -36,8 +36,7 @@ services:
 
   # MCP over Actual for Claude/Codex: actual-mcp.robbedekien.be (Access service token + bearer).
   actual-mcp:
-    # Portainer does not build: build on the NAS first (services/actual-mcp/README.md), then redeploy.
-    build: ./services/actual-mcp
+    build: ./services/actual-mcp # Portainer builds on redeploy; never pull this local-only image
     image: actual-mcp:1.14.0-actual26.10
     pull_policy: never
     container_name: actual-mcp

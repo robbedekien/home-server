@@ -4,15 +4,7 @@ Deployed on the NAS (`financial` stack) at `https://actual-mcp.robbedekien.be/mc
 
 ## Deploy / update
 
-Portainer does not build images, and the NAS Docker has no BuildKit. Build on the NAS over SSH with the classic builder, then redeploy the stack (`pull_policy: never` makes it use the local image):
-
-```sh
-cd services/actual-mcp
-COPYFILE_DISABLE=1 tar --no-xattrs -cf - Dockerfile upstream.patch package.json package-lock.json secrets.ts finance.test.ts \
-  | ssh robbedekien@ssh.robbedekien.be 'export PATH=/usr/local/bin:$PATH; rm -rf /tmp/amb && mkdir /tmp/amb && cd /tmp/amb && tar -xf - && DOCKER_BUILDKIT=0 docker build -t actual-mcp:1.14.0-actual26.10 .'
-```
-
-Bump the image tag in `docker-compose-finance.yml` and the command together when the build inputs change.
+Push to `main`: the webhook redeploys the stack and Portainer builds the image. `pull_policy: never` stops Portainer's scheduled `compose pull` from failing on this local-only image (which would abort the whole stack deploy). Bump the image tag when the build inputs change. The Dockerfile avoids BuildKit-only syntax so `DOCKER_BUILDKIT=0 docker build` over SSH also works for a manual check.
 
 The build fetches s-stefanov/actual-mcp **1.14.0**, commit `16c9274ab4a4370bafb529ff4e20200e5217cbfd`, verifies archive SHA-256 `defd622c94361b771e32b257212d0d971406cddb63dbc4149218a5561175630c`, applies `upstream.patch` and uses this package/lock pair. Both `@actual-app/api` and `@actual-app/core` are pinned to **26.10.0**, matching the existing Actual server. Upstream source is fetched only in the build stage; its license is retained in the runtime image. Source is not vendored here. `secrets.ts` and `finance.test.ts` are copied into the upstream connection directory.
 
