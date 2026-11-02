@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "actual": {
+      "type": "http",
+      "url": "https://actual-mcp.example.invalid/mcp",
+      "headersHelper": "python3 /Users/robbedekien/Projects/home-server/.claude/worktrees/finance-agent/services/actual-mcp/client-headers.py"
+    }
+  }
+}

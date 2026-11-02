@@ -34,6 +34,36 @@ services:
       - 1.1.1.1
     restart: unless-stopped
 
+  # MCP over Actual for Claude/Codex: actual-mcp.robbedekien.be (Access service token + bearer).
+  actual-mcp:
+    # Portainer does not build: build on the NAS first (services/actual-mcp/README.md), then redeploy.
+    build: ./services/actual-mcp
+    image: actual-mcp:1.14.0-actual26.10
+    pull_policy: never
+    container_name: actual-mcp
+    user: "1026:100"
+    environment:
+      ACTUAL_SERVER_URL: http://actual:5006
+      ACTUAL_DATA_DIR: /data
+      ACTUAL_SESSION_TOKEN_FILE: /run/secrets/session-token
+      ACTUAL_BUDGET_SYNC_ID_FILE: /run/secrets/budget-sync-id
+      ACTUAL_BUDGET_ENCRYPTION_PASSWORD_FILE: /run/secrets/e2ee-password
+      BEARER_TOKEN_FILE: /run/secrets/mcp-bearer
+    volumes:
+      # session-token, budget-sync-id, e2ee-password, mcp-bearer; each chmod 600, owned by 1026
+      - /volume2/docker/services/actual-mcp/secrets:/run/secrets:ro
+    tmpfs:
+      - /data:rw,noexec,nosuid,size=256m,uid=1026,gid=100,mode=0700
+      - /tmp:rw,noexec,nosuid,size=64m,mode=1777
+    read_only: true
+    ports:
+      - "127.0.0.1:5007:3000"
+    networks: [finance]
+    depends_on: [actual]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    restart: unless-stopped
+
   actual-backup:
     image: offen/docker-volume-backup:v2.49.1
     container_name: actual-backup

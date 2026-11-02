@@ -1,0 +1,10 @@
+ingress:
+  - hostname: actual-mcp.example.invalid
+    service: http://127.0.0.1:5007
+    originRequest:
+      access:
+        required: true
+        teamName: robbedekien
+        audTag:
+          - REPLACE_WITH_ACTUAL_MCP_ACCESS_APPLICATION_AUD
+  - service: http_status:404

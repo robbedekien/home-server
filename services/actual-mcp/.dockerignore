@@ -1,0 +1,7 @@
+*
+!Dockerfile
+!upstream.patch
+!package.json
+!package-lock.json
+!secrets.ts
+!finance.test.ts

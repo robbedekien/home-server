@@ -1,0 +1,510 @@
+diff --git a/src/index.ts b/src/index.ts
+index e796a7f..050e2bb 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -19,6 +19,7 @@ import express, { NextFunction, Request, Response } from 'express';
+ import { randomUUID } from 'node:crypto';
+ import { parseArgs } from 'node:util';
+ import { isValidBearerToken } from './utils/bearer-auth.js';
++import { readSecret, loadOwnerSecrets } from './integrations/actual/secrets.js';
+ import { initActualApi, shutdownActualApi } from './actual-api.js';
+ import { fetchAllAccounts } from './core/data/fetch-accounts.js';
+ import { getActualConnection } from './integrations/actual/connection.js';
+@@ -28,6 +29,12 @@ import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
+ // Reason: dotenv@17 (dotenvx) prints to stdout by default, which breaks MCP stdio JSON parsing
+ dotenv.config({ path: '.env', quiet: true } as Parameters<typeof dotenv.config>[0]);
+ 
++for (const method of ['log', 'info', 'warn', 'error', 'debug', 'group', 'groupEnd'] as const) {
++  console[method] = () => undefined;
++}
++process.env.BEARER_TOKEN = readSecret('BEARER_TOKEN_FILE');
++loadOwnerSecrets();
++
+ // Argument parsing
+ const {
+   values: {
+@@ -96,19 +103,7 @@ const bearerAuth = (req: Request, res: Response, next: NextFunction): void => {
+   next();
+ };
+ 
+-/**
+- * Safely stringify values for logging without throwing on circular structures.
+- */
+-const safeStringify = (value: unknown): string => {
+-  try {
+-    return JSON.stringify(value);
+-  } catch {
+-    return '[unserializable]';
+-  }
+-};
+-
+-const toErrorMessage = (value: unknown): string =>
+-  value instanceof Error ? `${value.name}: ${value.message}` : safeStringify(value);
++const toErrorMessage = (_value: unknown): string => 'Request failed (details suppressed)';
+ 
+ // Reason: drainAndClose() waits on in-flight Actual work; if the Actual server is
+ // unreachable a hanging sync/download would keep the process alive forever, and because
+@@ -154,16 +149,13 @@ const onShutdownSignal = (shutdown: (signal: string) => Promise<void>): void =>
+   }
+ };
+ 
+-// Reason: a rejection or throw from anywhere in the process (e.g. an unawaited async
+-// side-effect inside @actual-app/api, see s-stefanov/actual-mcp#150 and #95) otherwise
+-// terminates the whole server. That kills every in-flight tool call and, over stdio,
+-// disconnects the client; over HTTP it can leave sessions in a state that looks
+-// connected but never responds. Log and keep serving instead of exiting.
+ process.on('unhandledRejection', (reason) => {
+-  console.error(`Unhandled rejection: ${toErrorMessage(reason)}`);
++  process.stderr.write(`Unhandled rejection: ${toErrorMessage(reason)}\n`);
++  process.exit(1);
+ });
+ process.on('uncaughtException', (err) => {
+-  console.error(`Uncaught exception: ${toErrorMessage(err)}`);
++  process.stderr.write(`Uncaught exception: ${toErrorMessage(err)}\n`);
++  process.exit(1);
+ });
+ 
+ // ----------------------------
+@@ -211,9 +203,8 @@ async function main(): Promise<void> {
+     console.error('Warning: Neither ACTUAL_DATA_DIR nor ACTUAL_SERVER_URL is set.');
+   }
+ 
+-  if (process.env.ACTUAL_SERVER_URL && !process.env.ACTUAL_PASSWORD) {
+-    console.error('Warning: ACTUAL_SERVER_URL is set but ACTUAL_PASSWORD is not.');
+-    console.error('If your server requires authentication, initialization will fail.');
++  if (!useSse || !enableBearer || !enableWrite) {
++    throw new Error('Required flags: --sse --enable-bearer --enable-write');
+   }
+ 
+   if (useSse) {
+diff --git a/src/integrations/actual/connection.ts b/src/integrations/actual/connection.ts
+index 6b3ad45..47577bf 100644
+--- a/src/integrations/actual/connection.ts
++++ b/src/integrations/actual/connection.ts
+@@ -1,11 +1,6 @@
+ import * as api from '@actual-app/api';
+ import * as fs from 'fs';
+-import * as path from 'path';
+-import * as os from 'os';
+-import { BudgetFile } from '../../types.js';
+-
+-const DEFAULT_DATA_DIR: string = path.resolve(os.homedir() || '.', '.actual');
+-const DEFAULT_SYNC_TTL_MS = 60_000;
++import { loadOwnerSecrets } from './secrets.js';
+ 
+ type ConnectionState = 'idle' | 'initializing' | 'ready' | 'closing' | 'closed' | 'failed';
+ type ActualApi = Awaited<ReturnType<typeof api.init>>;
+@@ -13,21 +8,10 @@ type ActualApi = Awaited<ReturnType<typeof api.init>>;
+ export class ActualConnection {
+   private state: ConnectionState = 'idle';
+   private inflightInit: Promise<void> | null = null;
+-  private inflightSync: Promise<void> | null = null;
+-  private lastSyncAt = 0;
+   private queueTail: Promise<unknown> = Promise.resolve();
+   private closePromise: Promise<void> | null = null;
+   private actualLib: ActualApi | null = null;
+-  // Reason: api.init() opens native handles (lmdb/sqlite) before it resolves, and it can
+-  // resolve while a later init step still fails. Track "handle may exist" separately from
+-  // state so drainAndClose() still shuts the API down after a failed init.
+-  private apiOpened = false;
+-
+-  private isClosingOrClosed(): boolean {
+-    return this.state === 'closing' || this.state === 'closed';
+-  }
+ 
+-  /** Add work to the shared lifecycle queue without letting a failure block later work. */
+   private enqueue<T>(operation: () => Promise<T>): Promise<T> {
+     const result = this.queueTail.then(operation);
+     this.queueTail = result.then(
+@@ -37,169 +21,79 @@ export class ActualConnection {
+     return result;
+   }
+ 
+-  /**
+-   * Ensure readiness, then run an operation after all preceding operations.
+-   *
+-   * `operation` must call raw `api.*` functions. Calling an actual-api facade
+-   * wrapper would re-enter this queue and wait for its own queued operation.
+-   *
+-   * @param operation - The raw Actual API operation to execute.
+-   * @returns The operation result.
+-   */
+   run<T>(operation: (actualLib: ActualApi) => Promise<T>): Promise<T> {
+-    if (this.isClosingOrClosed()) {
+-      return Promise.reject(new Error('ActualConnection is closed'));
+-    }
+     const ready = this.ensureReady();
+     return this.enqueue(async () => {
+       await ready;
+-      return operation(this.actualLib as ActualApi);
++      if (this.state !== 'ready') throw new Error('Actual connection unavailable; restart required');
++      try {
++        await this.refresh();
++        const result = await operation(this.actualLib as ActualApi);
++        if (result && typeof result === 'object' && 'error' in result && result.error) {
++          throw new Error('Actual operation failed');
++        }
++        await api.sync();
++        return result;
++      } catch {
++        this.state = 'failed';
++        throw new Error('Actual operation or sync failed; outcome unknown; do not retry writes; restart required');
++      }
+     });
+   }
+ 
+-  /**
+-   * Ensure the connection is initialized and (when already ready) not stale.
+-   * Concurrent callers share one in-flight init; a failed attempt is not
+-   * cached — the next call starts a fresh attempt.
+-   */
+   async ensureReady(): Promise<void> {
+-    if (this.state === 'closing' || this.state === 'closed') {
+-      throw new Error('ActualConnection is closed');
+-    }
+-    if (this.state === 'ready') {
+-      return this.syncIfStale();
+-    }
+-    if (this.state === 'initializing' && this.inflightInit) {
+-      return this.inflightInit;
+-    }
+-    // idle or failed → start a fresh attempt
++    if (this.state === 'ready') return;
++    if (this.state === 'initializing' && this.inflightInit) return this.inflightInit;
++    if (this.state !== 'idle') throw new Error('Actual connection unavailable; restart required');
+     this.state = 'initializing';
+     this.inflightInit = this.enqueue(() => this.doInit())
+       .then(() => {
+-        if (this.state === 'initializing') {
+-          this.state = 'ready';
+-        }
++        if (this.state === 'initializing') this.state = 'ready';
+       })
+-      .catch((err: unknown) => {
+-        if (this.state === 'initializing') {
+-          this.state = 'failed';
+-        }
+-        this.inflightInit = null;
+-        throw err;
++      .catch(() => {
++        if (this.state === 'initializing') this.state = 'failed';
++        throw new Error('Actual initialization failed; restart required');
+       });
+     return this.inflightInit;
+   }
+ 
+-  private syncTtlMs(): number {
+-    const raw = process.env.ACTUAL_SYNC_TTL_MS;
+-    if (raw === undefined || raw === '') return DEFAULT_SYNC_TTL_MS;
+-    const parsed = Number(raw);
+-    return Number.isFinite(parsed) ? parsed : DEFAULT_SYNC_TTL_MS;
+-  }
+-
+-  /**
+-   * Pull remote changes into local data when the TTL has elapsed. Concurrent
+-   * stale callers share one in-flight sync. A failed sync is logged, not thrown:
+-   * answering from slightly stale data beats failing the call.
+-   */
+-  private syncIfStale(): Promise<void> {
+-    const ttl = this.syncTtlMs();
+-    if (ttl < 0) return Promise.resolve();
+-    if (Date.now() - this.lastSyncAt < ttl) return Promise.resolve();
+-    if (this.inflightSync) return this.inflightSync;
+-
+-    this.inflightSync = this.enqueue(() => api.sync())
+-      .then(() => {
+-        this.lastSyncAt = Date.now();
+-      })
+-      .catch((error: unknown) => {
+-        console.error('Failed to sync with Actual server, continuing with local data:', error);
+-      })
+-      .finally(() => {
+-        this.inflightSync = null;
+-      });
+-    return this.inflightSync;
++  private async refresh(): Promise<void> {
++    const user = await this.actualLib!.send('subscribe-get-user');
++    if (!user || user.tokenExpired === true || user.offline === true) {
++      throw new Error('Actual authentication unavailable');
++    }
++    await api.sync();
+   }
+ 
+-  /**
+-   * Stop accepting new operations, await all in-flight work (init, sync, and
+-   * the operation queue), then shut down the underlying API. Idempotent.
+-   */
+   async drainAndClose(): Promise<void> {
+     if (this.closePromise) return this.closePromise;
+     this.state = 'closing';
+-
+     this.closePromise = (async () => {
+-      // Await in-flight init and sync first, then whatever operations are queued.
+-      await Promise.allSettled([this.inflightInit ?? Promise.resolve(), this.inflightSync ?? Promise.resolve()]);
+-      await this.queueTail.catch(() => undefined);
+-
+-      if (this.apiOpened) {
+-        try {
+-          await api.shutdown();
+-        } catch (err) {
+-          console.error('Error shutting down Actual Budget API:', err);
+-        }
++      await this.queueTail;
++      if (this.actualLib) {
++        // api.shutdown syncs; unload first to avoid replaying an uncertain write.
++        await this.actualLib.send('close-budget');
++        await api.shutdown();
+       }
+       this.state = 'closed';
+-      this.lastSyncAt = 0;
+-      this.apiOpened = false;
+       this.actualLib = null;
+     })();
+-
+     return this.closePromise;
+   }
+ 
+-  /**
+-   * Open the API, pick a budget, and download it. On any failure after `api.init()`
+-   * has opened handles, releases them before rethrowing so a retry starts clean.
+-   */
+   private async doInit(): Promise<void> {
+-    console.error('Initializing Actual Budget API...');
+-    const dataDir = process.env.ACTUAL_DATA_DIR || DEFAULT_DATA_DIR;
+-    if (!fs.existsSync(dataDir)) {
+-      fs.mkdirSync(dataDir, { recursive: true });
+-    }
++    const { sessionToken, budgetId, encryptionPassword } = loadOwnerSecrets();
++    const dataDir = process.env.ACTUAL_DATA_DIR;
++    if (!dataDir) throw new Error('Actual data directory required');
+     const serverURL = process.env.ACTUAL_SERVER_URL;
+-    const password = process.env.ACTUAL_PASSWORD;
+-    // Reason: InitConfig is a discriminated union in 26.x — NoServerConfig forbids serverURL/password
+-    const initConfig = serverURL ? { dataDir, serverURL, password: password ?? '' } : { dataDir };
+-    this.apiOpened = true;
+-    this.actualLib = await api.init(initConfig);
+-
+-    try {
+-      const budgets: BudgetFile[] = await api.getBudgets();
+-      if (!budgets || budgets.length === 0) {
+-        throw new Error('No budgets found. Please create a budget in Actual first.');
+-      }
+-
+-      const budgetId: string = process.env.ACTUAL_BUDGET_SYNC_ID || budgets[0].cloudFileId || budgets[0].id || '';
+-      console.error(`Loading budget: ${budgetId}`);
+-      await api.downloadBudget(
+-        budgetId,
+-        process.env.ACTUAL_BUDGET_ENCRYPTION_PASSWORD
+-          ? { password: process.env.ACTUAL_BUDGET_ENCRYPTION_PASSWORD }
+-          : undefined
+-      );
+-
+-      // Reason: seed lastSyncAt so the first call after init does not immediately sync.
+-      this.lastSyncAt = Date.now();
+-    } catch (err) {
+-      // Reason: api.init() already opened native handles. Release them here, before a
+-      // retry can call api.init() again, instead of leaving the failed attempt's state
+-      // around for drainAndClose() to find later. If shutdown itself fails, keep
+-      // apiOpened=true so drainAndClose() still attempts cleanup, but always rethrow the
+-      // original error rather than the shutdown error.
+-      try {
+-        await api.shutdown();
+-        this.apiOpened = false;
+-        this.actualLib = null;
+-      } catch (shutdownErr) {
+-        console.error('Error shutting down Actual Budget API after failed init:', shutdownErr);
+-      }
+-      throw err;
+-    }
+-    console.error('Actual Budget API initialized successfully');
++    if (serverURL !== 'http://actual:5006') throw new Error('Unexpected Actual server');
++    fs.mkdirSync(dataDir, { recursive: true, mode: 0o700 });
++    this.actualLib = await api.init({ dataDir, serverURL, sessionToken, verbose: false });
++    const files = await this.actualLib.send('get-remote-files');
++    const selected = files?.find((file) => file.groupId === budgetId);
++    if (!selected?.encryptKeyId) throw new Error('Selected encrypted budget unavailable');
++    await api.downloadBudget(budgetId, { password: encryptionPassword });
++    await this.refresh();
+   }
+ }
+ 
+diff --git a/src/prompts.ts b/src/prompts.ts
+index 7d8bcaa..15f5409 100644
+--- a/src/prompts.ts
++++ b/src/prompts.ts
+@@ -184,7 +184,7 @@ export const setupPrompts = (server: Server): void => {
+       }
+     } catch (error) {
+       console.error(`Error getting prompt ${request.params.name}:`, error);
+-      throw error instanceof Error ? error : new Error(String(error));
++      throw new Error('Prompt unavailable');
+     }
+   });
+ };
+diff --git a/src/resources.ts b/src/resources.ts
+index 8f44133..a07a053 100644
+--- a/src/resources.ts
++++ b/src/resources.ts
+@@ -27,11 +27,8 @@ export const setupResources = (server: Server): void => {
+           mimeType: 'text/markdown',
+         })),
+       };
+-    } catch (error) {
+-      // Reason: re-throwing a non-Error APIError object causes an unhandled rejection crash in Node ≥15.
+-      // Return an empty list so the MCP server stays alive when the budget isn't loaded yet.
+-      console.error('Error listing resources:', error);
+-      return { resources: [] };
++    } catch {
++      throw new Error('Actual resources unavailable');
+     }
+   });
+ 
+@@ -168,9 +165,8 @@ To view transactions for this account, use the get-transactions tool.`;
+           },
+         ],
+       };
+-    } catch (error) {
+-      console.error('Error reading resource:', error);
+-      throw error;
++    } catch {
++      throw new Error('Actual resource unavailable');
+     }
+   });
+ };
+diff --git a/src/tools/index.ts b/src/tools/index.ts
+index ffc3c08..a2aeb76 100644
+--- a/src/tools/index.ts
++++ b/src/tools/index.ts
+@@ -10,15 +10,12 @@ import * as balanceHistory from './balance-history/index.js';
+ import * as getCustomReports from './custom-reports/get-custom-reports/index.js';
+ import * as createCustomReport from './custom-reports/create-custom-report/index.js';
+ import * as updateCustomReport from './custom-reports/update-custom-report/index.js';
+-import * as deleteCustomReport from './custom-reports/delete-custom-report/index.js';
+ import * as getDashboards from './dashboards/get-dashboards/index.js';
+ import * as addDashboardWidget from './dashboards/add-dashboard-widget/index.js';
+ import * as updateDashboardWidget from './dashboards/update-dashboard-widget/index.js';
+-import * as removeDashboardWidget from './dashboards/remove-dashboard-widget/index.js';
+ import * as organizeDashboard from './dashboards/organize-dashboard/index.js';
+ import * as createDashboardPage from './dashboards/create-dashboard-page/index.js';
+ import * as renameDashboardPage from './dashboards/rename-dashboard-page/index.js';
+-import * as deleteDashboardPage from './dashboards/delete-dashboard-page/index.js';
+ import * as budgetVsActual from './budget-vs-actual/index.js';
+ import * as cashFlow from './cash-flow/index.js';
+ import * as categoryTrends from './category-trends/index.js';
+@@ -26,8 +23,6 @@ import * as netWorth from './net-worth/index.js';
+ import * as spendingByPayee from './spending-by-payee/index.js';
+ import * as createCategoryGroup from './categories/create-category-group/index.js';
+ import * as createCategory from './categories/create-category/index.js';
+-import * as deleteCategoryGroup from './categories/delete-category-group/index.js';
+-import * as deleteCategory from './categories/delete-category/index.js';
+ import * as getGroupedCategories from './categories/get-grouped-categories/index.js';
+ import * as updateCategoryGroup from './categories/update-category-group/index.js';
+ import * as updateCategory from './categories/update-category/index.js';
+@@ -35,25 +30,17 @@ import * as getAccounts from './get-accounts/index.js';
+ import * as getTransactions from './get-transactions/index.js';
+ import * as monthlySummary from './monthly-summary/index.js';
+ import * as createPayee from './payees/create-payee/index.js';
+-import * as deletePayee from './payees/delete-payee/index.js';
+ import * as getPayees from './payees/get-payees/index.js';
+ import * as updatePayee from './payees/update-payee/index.js';
+ import * as createRule from './rules/create-rule/index.js';
+-import * as deleteRule from './rules/delete-rule/index.js';
+ import * as getRules from './rules/get-rules/index.js';
+ import * as updateRule from './rules/update-rule/index.js';
+ import * as spendingByCategory from './spending-by-category/index.js';
+-import * as deleteTransaction from './delete-transaction/index.js';
+ import * as updateTransaction from './update-transaction/index.js';
+ import * as getBudgetMonths from './budgets/get-budget-months/index.js';
+ import * as getBudgetMonth from './budgets/get-budget-month/index.js';
+-import * as setBudgetAmount from './budgets/set-budget-amount/index.js';
+-import * as setBudgetCarryover from './budgets/set-budget-carryover/index.js';
+-import * as holdBudgetForNextMonth from './budgets/hold-budget-for-next-month/index.js';
+-import * as resetBudgetHold from './budgets/reset-budget-hold/index.js';
+ import * as createTransaction from './create-transaction/index.js';
+ import * as importTransactions from './import-transactions/index.js';
+-import * as runBankSync from './run-bank-sync/index.js';
+ 
+ const readTools = [
+   getTransactions,
+@@ -78,35 +65,22 @@ const readTools = [
+ const writeTools = [
+   createCategory,
+   updateCategory,
+-  deleteCategory,
+   createCategoryGroup,
+   updateCategoryGroup,
+-  deleteCategoryGroup,
+   createPayee,
+   updatePayee,
+-  deletePayee,
+   createRule,
+   updateRule,
+-  deleteRule,
+   updateTransaction,
+-  deleteTransaction,
+   createTransaction,
+   importTransactions,
+-  runBankSync,
+   createCustomReport,
+   updateCustomReport,
+-  deleteCustomReport,
+   addDashboardWidget,
+   updateDashboardWidget,
+-  removeDashboardWidget,
+   organizeDashboard,
+   createDashboardPage,
+   renameDashboardPage,
+-  deleteDashboardPage,
+-  setBudgetAmount,
+-  setBudgetCarryover,
+-  holdBudgetForNextMonth,
+-  resetBudgetHold,
+ ];
+ 
+ export const setupTools = (server: Server, enableWrite: boolean): void => {
+@@ -131,13 +105,13 @@ export const setupTools = (server: Server, enableWrite: boolean): void => {
+ 
+       const tool = allTools.find((t) => t.schema.name === name);
+       if (!tool) {
+-        return error(`Unknown tool ${name}`);
++        return error('Tool unavailable');
+       }
+ 
+       // @ts-expect-error: Argument type is handled by Zod schema validation
+       return await tool.handler(args);
+     } catch (err) {
+-      console.error(`Error executing tool ${request.params.name}:`, err);
++      console.error('Tool failed');
+       return errorFromCatch(err);
+     }
+   });
+diff --git a/src/utils/response.ts b/src/utils/response.ts
+index 2aa5f9f..1573ad6 100644
+--- a/src/utils/response.ts
++++ b/src/utils/response.ts
+@@ -74,23 +74,8 @@ export function error(message: string): CallToolResult {
+  * @param err - The error object or value
+  * @returns An error response object
+  */
+-export function errorFromCatch(err: unknown): CallToolResult {
+-  let message: string;
+-  if (err instanceof Error) {
+-    message = err.message;
+-  } else if (
+-    typeof err === 'object' &&
+-    err !== null &&
+-    'message' in err &&
+-    typeof (err as Record<string, unknown>).message === 'string'
+-  ) {
+-    // Reason: @actual-app/api throws structured objects like { type: 'APIError', message: '...' }
+-    // rather than Error instances. Extract the message field so errors are human-readable.
+-    message = (err as Record<string, unknown>).message as string;
+-  } else {
+-    message = String(err);
+-  }
+-  return error(message);
++export function errorFromCatch(_err: unknown): CallToolResult {
++  return error('Request failed; write outcome may be unknown. Do not retry mutations automatically.');
+ }
+ 
+ /**
