@@ -37,7 +37,7 @@ services:
   # MCP over Actual for Claude/Codex: actual-mcp.robbedekien.be (Access service token + bearer).
   actual-mcp:
     build: ./services/actual-mcp # Portainer builds on redeploy; never pull this local-only image
-    image: actual-mcp:1.14.0-actual26.10
+    image: actual-mcp:1.14.0-actual26.10-banksync
     pull_policy: never
     container_name: actual-mcp
     user: "1026:100"
@@ -59,6 +59,25 @@ services:
       - "127.0.0.1:5007:3000"
     networks: [finance]
     depends_on: [actual]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    restart: unless-stopped
+
+  # Actual only bank-syncs when someone clicks it; this does it every 8h (PSD2 allows 4 unattended pulls/day).
+  actual-bank-sync:
+    image: actual-mcp:1.14.0-actual26.10-banksync # built by actual-mcp above
+    pull_policy: never
+    container_name: actual-bank-sync
+    user: "1026:100"
+    entrypoint: ["sh", "-c", "while :; do node bank-sync.mjs; sleep 28800; done"]
+    volumes:
+      - /volume2/docker/services/actual-mcp/secrets:/run/secrets:ro
+    tmpfs:
+      - /data:rw,noexec,nosuid,size=256m,uid=1026,gid=100,mode=0700
+      - /tmp:rw,noexec,nosuid,size=64m,mode=1777
+    read_only: true
+    networks: [finance]
+    depends_on: [actual, actual-mcp]
     security_opt: [no-new-privileges:true]
     cap_drop: [ALL]
     restart: unless-stopped

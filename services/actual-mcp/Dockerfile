@@ -16,6 +16,7 @@ WORKDIR /app
 COPY --from=build /app/package.json /app/package-lock.json /app/LICENSE ./
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/build ./build
+COPY bank-sync.mjs ./
 RUN useradd --uid 1026 --gid 100 --home-dir /data --no-create-home actual-mcp
 USER 1026:100
 EXPOSE 3000
