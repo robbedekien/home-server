@@ -5,3 +5,4 @@
 !package-lock.json
 !secrets.ts
 !finance.test.ts
+!bank-sync.mjs
