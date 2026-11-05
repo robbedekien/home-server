@@ -69,7 +69,7 @@ services:
     pull_policy: never
     container_name: actual-bank-sync
     user: "1026:100"
-    entrypoint: ["sh", "-c", "while :; do node bank-sync.mjs; sleep 28800; done"]
+    entrypoint: ["sh", "-c", "while :; do if node bank-sync.mjs; then sleep 28800; else sleep 300; fi; done"]
     volumes:
       - /volume2/docker/services/actual-mcp/secrets:/run/secrets:ro
     tmpfs:
